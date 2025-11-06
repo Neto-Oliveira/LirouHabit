@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LirouHabit - Sistema de Hábitos com Motivação</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1><i class="fas fa-seedling"></i> LirouHabit - Sistema de Hábitos</h1>
+            <p>Crie rotinas saudáveis e conquiste recompensas diárias</p>
+        </div>
+    </header>
+
+    <main>
+        <section class="configuracao-avancada">
+            <h2><i class="fas fa-sliders-h"></i> Configuração de Rotinas Diárias</h2>
+            
+            <!-- Informações Importantes -->
+            <div class="info-sistema">
+                <div class="info-card">
+                    <h3><i class="fas fa-lightbulb"></i> Como Funciona o Sistema</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <i class="fas fa-calendar-check"></i>
+                            <div>
+                                <strong>Rotinas Diárias</strong>
+                                <p>Configure hábitos específicos para cada dia da semana</p>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-gift"></i>
+                            <div>
+                                <strong>Recompensas Motivacionais</strong>
+                                <p>Defina recompensas para quando completar todas as tarefas do dia</p>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-fire"></i>
+                            <div>
+                                <strong>Sequência de Fogo</strong>
+                                <p>Acompanhe sua sequência de dias produtivos consecutivos</p>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-chart-line"></i>
+                            <div>
+                                <strong>Progresso Semanal</strong>
+                                <p>Visualize seu progresso ao longo da semana</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Abas para Biblioteca -->
+            <div class="abas-biblioteca">
+                <button class="aba ativa" data-aba="biblioteca-principal">
+                    <i class="fas fa-book"></i> Biblioteca de Hábitos
+                </button>
+                <button class="aba" data-aba="biblioteca-pessoal">
+                    <i class="fas fa-user-edit"></i> Hábitos Pessoais
+                </button>
+            </div>
+            
+            <!-- Biblioteca Principal -->
+            <div id="biblioteca-principal" class="conteudo-aba ativa">
+                <div class="biblioteca-exercicios">
+                    <h3><i class="fas fa-book-open"></i> Biblioteca de Hábitos</h3>
+                    <div class="filtros">
+                        <select id="filtro-categoria">
+                            <option value="">Todas as Categorias</option>
+                            <option value="saude">💊 Saúde</option>
+                            <option value="produtividade">⚡ Produtividade</option>
+                            <option value="mental">🧠 Saúde Mental</option>
+                            <option value="fitness">🏃‍♂️ Fitness</option>
+                            <option value="aprendizado">📚 Aprendizado</option>
+                            <option value="social">👥 Social</option>
+                            <option value="casa">🏠 Casa</option>
+                            <option value="financeiro">💰 Financeiro</option>
+                        </select>
+                        <input type="text" id="busca-habito" placeholder="🔍 Buscar hábito...">
+                        <button id="btn-limpar-filtros" class="btn-limpar">
+                            <i class="fas fa-times"></i> Limpar Filtros
+                        </button>
+                    </div>
+                    <div id="lista-habitos" class="lista-exercicios">
+                        <!-- Hábitos carregados via JavaScript -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Biblioteca Pessoal -->
+            <div id="biblioteca-pessoal" class="conteudo-aba">
+                <div class="biblioteca-pessoal">
+                    <h3><i class="fas fa-user-edit"></i> Hábitos Pessoais</h3>
+                    <div class="adicionar-exercicio-pessoal">
+                        <div class="form-grid">
+                            <input type="text" id="novo-habito-nome" placeholder="Nome do hábito">
+                            <select id="novo-habito-categoria">
+                                <option value="saude">💊 Saúde</option>
+                                <option value="produtividade">⚡ Produtividade</option>
+                                <option value="mental">🧠 Saúde Mental</option>
+                                <option value="fitness">🏃‍♂️ Fitness</option>
+                                <option value="aprendizado">📚 Aprendizado</option>
+                                <option value="social">👥 Social</option>
+                                <option value="casa">🏠 Casa</option>
+                                <option value="financeiro">💰 Financeiro</option>
+                            </select>
+                            <input type="text" id="novo-habito-dica" placeholder="Dica (opcional)">
+                            <button id="btn-adicionar-pessoal" class="btn-principal">
+                                <i class="fas fa-plus"></i> Adicionar Hábito
+                            </button>
+                        </div>
+                    </div>
+                    <div id="lista-habitos-pessoal" class="lista-exercicios">
+                        <!-- Hábitos pessoais carregados via JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rotinas Diárias -->
+            <div class="treinos-personalizados">
+                <h3><i class="fas fa-calendar-day"></i> Rotinas Diárias</h3>
+                <p class="subtitulo">
+                    <i class="fas fa-info-circle"></i> Adicione hábitos para cada dia da semana e defina recompensas motivacionais
+                </p>
+                
+                <!-- Container com Scroll Horizontal -->
+                <div class="scroll-horizontal">
+                    <div class="grupos-treino-scroll">
+                        <!-- Segunda-feira -->
+                        <div class="grupo" data-grupo="segunda">
+                            <div class="grupo-header">
+                                <h4><i class="fas fa-calendar-alt"></i> SEGUNDA-FEIRA</h4>
+                                <input type="text" class="nome-treino" placeholder="Ex: Rotina de Início de Semana">
+                                <input type="text" class="recompensa-dia" placeholder="🎁 Recompensa: Ex: Assistir série">
+                            </div>
+                            <div class="exercicios-lista" data-grupo="segunda">
+                                <!-- Hábitos selecionados -->
+                            </div>
+                            <div class="controles-grupo">
+                                <button class="btn-limpar" data-treino="segunda">
+                                    <i class="fas fa-trash"></i> Limpar
+                                </button>
+                                <span class="contador">0 hábitos</span>
+                            </div>
+                        </div>
+
+                        <!-- Terça-feira -->
+                        <div class="grupo" data-grupo="terca">
+                            <div class="grupo-header">
+                                <h4><i class="fas fa-calendar-alt"></i> TERÇA-FEIRA</h4>
+                                <input type="text" class="nome-treino" placeholder="Ex: Foco no Trabalho">
+                                <input type="text" class="recompensa-dia" placeholder="🎁 Recompensa: Ex: Jogar videogame">
+                            </div>
+                            <div class="exercicios-lista" data-grupo="terca">
+                                <!-- Hábitos selecionados -->
+                            </div>
+                            <div class="controles-grupo">
+                                <button class="btn-limpar" data-treino="terca">
+                                    <i class="fas fa-trash"></i> Limpar
+                                </button>
+                                <span class="contador">0 hábitos</span>
+                            </div>
+                        </div>
+
+                        <!-- Quarta-feira -->
+                        <div class="grupo" data-grupo="quarta">
+                            <div class="grupo-header">
+                                <h4><i class="fas fa-calendar-alt"></i> QUARTA-FEIRA</h4>
+                                <input type="text" class="nome-treino" placeholder="Ex: Dia de Equilíbrio">
+                                <input type="text" class="recompensa-dia" placeholder="🎁 Recompensa: Ex: Comer sobremesa">
+                            </div>
+                            <div class="exercicios-lista" data-grupo="quarta">
+                                <!-- Hábitos selecionados -->
+                            </div>
+                            <div class="controles-grupo">
+                                <button class="btn-limpar" data-treino="quarta">
+                                    <i class="fas fa-trash"></i> Limpar
+                                </button>
+                                <span class="contador">0 hábitos</span>
+                            </div>
+                        </div>
+
+                        <!-- Quinta-feira -->
+                        <div class="grupo" data-grupo="quinta">
+                            <div class="grupo-header">
+                                <h4><i class="fas fa-calendar-alt"></i> QUINTA-FEIRA</h4>
+                                <input type="text" class="nome-treino" placeholder="Ex: Preparação para o Fim de Semana">
+                                <input type="text" class="recompensa-dia" placeholder="🎁 Recompensa: Ex: Pedir comida">
+                            </div>
+                            <div class="exercicios-lista" data-grupo="quinta">
+                                <!-- Hábitos selecionados -->
+                            </div>
+                            <div class="controles-grupo">
+                                <button class="btn-limpar" data-treino="quinta">
+                                    <i class="fas fa-trash"></i> Limpar
+                                </button>
+                                <span class="contador">0 hábitos</span>
+                            </div>
+                        </div>
+
+                        <!-- Sexta-feira -->
+                        <div class="grupo" data-grupo="sexta">
+                            <div class="grupo-header">
+                                <h4><i class="fas fa-calendar-alt"></i> SEXTA-FEIRA</h4>
+                                <input type="text" class="nome-treino" placeholder="Ex: Finalização da Semana">
+                                <input type="text" class="recompensa-dia" placeholder="🎁 Recompensa: Ex: Sair com amigos">
+                            </div>
+                            <div class="exercicios-lista" data-grupo="sexta">
+                                <!-- Hábitos selecionados -->
+                            </div>
+                            <div class="controles-grupo">
+                                <button class="btn-limpar" data-treino="sexta">
+                                    <i class="fas fa-trash"></i> Limpar
+                                </button>
+                                <span class="contador">0 hábitos</span>
+                            </div>
+                        </div>
+
+                        <!-- Sábado -->
+                        <div class="grupo" data-grupo="sabado">
+                            <div class="grupo-header">
+                                <h4><i class="fas fa-calendar-alt"></i> SÁBADO</h4>
+                                <input type="text" class="nome-treino" placeholder="Ex: Descanso Ativo">
+                                <input type="text" class="recompensa-dia" placeholder="🎁 Recompensa: Ex: Dormir até tarde">
+                            </div>
+                            <div class="exercicios-lista" data-grupo="sabado">
+                                <!-- Hábitos selecionados -->
+                            </div>
+                            <div class="controles-grupo">
+                                <button class="btn-limpar" data-treino="sabado">
+                                    <i class="fas fa-trash"></i> Limpar
+                                </button>
+                                <span class="contador">0 hábitos</span>
+                            </div>
+                        </div>
+
+                        <!-- Domingo -->
+                        <div class="grupo" data-grupo="domingo">
+                            <div class="grupo-header">
+                                <h4><i class="fas fa-calendar-alt"></i> DOMINGO</h4>
+                                <input type="text" class="nome-treino" placeholder="Ex: Preparação para a Semana">
+                                <input type="text" class="recompensa-dia" placeholder="🎁 Recompensa: Ex: Assistir filme">
+                            </div>
+                            <div class="exercicios-lista" data-grupo="domingo">
+                                <!-- Hábitos selecionados -->
+                            </div>
+                            <div class="controles-grupo">
+                                <button class="btn-limpar" data-treino="domingo">
+                                    <i class="fas fa-trash"></i> Limpar
+                                </button>
+                                <span class="contador">0 hábitos</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ações -->
+            <div class="acoes">
+                <button id="btn-salvar" class="btn-principal">
+                    <i class="fas fa-save"></i> Salvar Configuração
+                </button>
+                <button id="btn-visualizar" class="btn-secundario">
+                    <i class="fas fa-eye"></i> Visualizar Minhas Rotinas
+                </button>
+                <button id="btn-resetar" class="btn-reset">
+                    <i class="fas fa-undo"></i> Resetar Tudo
+                </button>
+            </div>
+
+        </section>
+
+        <!-- Pré-visualização -->
+        <section class="preview-treino">
+            <h2><i class="fas fa-file-alt"></i> Pré-visualização das Suas Rotinas</h2>
+            <div id="preview-container">
+                <div class="preview-placeholder">
+                    <i class="fas fa-calendar-check"></i>
+                    <p>Configure as rotinas para ver a pré-visualização.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p><i class="fas fa-seedling"></i> LirouHabit - Sistema de Hábitos com Motivação</p>
+    </footer>
+
+    <script src="script-rotinas.js"></script>
+</body>
+</html>

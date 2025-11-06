@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Histórico do Hábito - LirouHabit</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .topbar { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:1rem; background:var(--bg-card); border-bottom:1px solid rgba(255,255,255,0.03);} 
+        .conteudo { max-width:900px; margin:2rem auto; padding:1rem; }
+        .meta { margin-bottom:1rem; }
+        .lista { display:flex; flex-direction:column; gap:0.5rem; }
+        .item { background:var(--bg-card-light); padding:0.75rem; border-radius:8px; }
+        .acoes { display:flex; gap:0.5rem; }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <div>
+            <h1 style="margin:0; font-size:1.2rem; color:var(--verde-principal)">Histórico do Hábito</h1>
+            <div style="color:var(--text-muted); font-size:0.9rem">Visualize quantas vezes marcou este hábito</div>
+        </div>
+        <div class="acoes">
+            <button id="btn-voltar" class="btn-secundario">← Voltar</button>
+            <button id="btn-export" class="btn-principal">Exportar CSV</button>
+        </div>
+    </div>
+
+    <main class="conteudo">
+        <div class="meta">
+            <h2 id="nome-habito">—</h2>
+            <div id="contador" class="contador-historico">0 / 365 dias desde --/--/----</div>
+        </div>
+
+        <section>
+            <h3>Marcações</h3>
+            <div id="lista-marcas" class="lista">
+                <!-- Datas -->
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Helpers locais (copiados do app principal)
+        function parseLocalDate(dateStr) { if (!dateStr) return new Date(); const parts = dateStr.split('-').map(Number); return new Date(parts[0], parts[1]-1, parts[2]); }
+        function getLocalDateString(date = new Date()){ const d = new Date(date); const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${day}`; }
+
+        function qs(name){ const u = new URL(window.location.href); return u.searchParams.get(name); }
+
+        function carregar() {
+            const habitoId = qs('habitoId');
+            if (!habitoId) return;
+
+            const raw = localStorage.getItem('historicoHabitos') || '{}';
+            const historico = JSON.parse(raw);
+            const dados = historico[habitoId] || { marcacoes: {}, startDate: null };
+
+            // tentar nome a partir de configuracaoRotinas
+            let nome = habitoId;
+            try {
+                const cfg = JSON.parse(localStorage.getItem('configuracaoRotinas') || '{}');
+                const parts = habitoId.split('-');
+                const idx = Number(parts.pop());
+                const dia = parts.join('-');
+                nome = cfg.dias?.[dia]?.habitos?.[idx]?.nome || habitoId;
+            } catch(e){}
+
+            document.getElementById('nome-habito').textContent = nome;
+
+            const marcacoes = Object.keys(dados.marcacoes || {}).sort((a,b) => parseLocalDate(b) - parseLocalDate(a));
+            const total = marcacoes.length;
+            const start = dados.startDate || '--';
+            const startFmt = start !== '--' ? parseLocalDate(start).toLocaleDateString('pt-BR') : '--/--/----';
+
+            document.getElementById('contador').textContent = `${total} / 365 dias desde ${startFmt}`;
+
+            const lista = document.getElementById('lista-marcas');
+            lista.innerHTML = '';
+            if (marcacoes.length === 0) {
+                lista.innerHTML = '<div class="item">Nenhuma marcação registrada.</div>';
+            } else {
+                marcacoes.forEach(d => {
+                    const el = document.createElement('div');
+                    el.className = 'item';
+                    el.textContent = parseLocalDate(d).toLocaleDateString('pt-BR');
+                    lista.appendChild(el);
+                });
+            }
+
+            // export
+            document.getElementById('btn-export').addEventListener('click', function(){
+                const lines = ['date'];
+                marcacoes.slice().reverse().forEach(d => lines.push(d));
+                const csv = lines.join('\n');
+                const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${(nome||habitoId).replace(/[^a-z0-9]/gi,'_')}_historico.csv`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
+            });
+
+            document.getElementById('btn-voltar').addEventListener('click', function(){ window.history.back(); });
+        }
+
+        document.addEventListener('DOMContentLoaded', carregar);
+    </script>
+</body>
+</html>
