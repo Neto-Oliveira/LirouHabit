@@ -6,22 +6,58 @@
     <title>Histórico do Hábito - LirouHabit</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        .topbar { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:1rem; background:var(--bg-card); border-bottom:1px solid rgba(255,255,255,0.03);} 
-        .conteudo { max-width:900px; margin:2rem auto; padding:1rem; }
-        .meta { margin-bottom:1rem; }
-        .lista { display:flex; flex-direction:column; gap:0.5rem; }
-        .item { background:var(--bg-card-light); padding:0.75rem; border-radius:8px; }
-        .acoes { display:flex; gap:0.5rem; }
+        .topbar { 
+            display:flex; 
+            align-items:center; 
+            justify-content:space-between; 
+            gap:1rem; 
+            padding:1rem; 
+            background:var(--bg-card); 
+            border-bottom:1px solid rgba(255,255,255,0.03);
+            flex-direction: column;
+        }
+        .conteudo { 
+            max-width:900px; 
+            margin:2rem auto; 
+            padding:1rem; 
+        }
+        .meta { 
+            margin-bottom:1rem; 
+        }
+        .lista { 
+            display:flex; 
+            flex-direction:column; 
+            gap:0.5rem; 
+        }
+        .item { 
+            background:var(--bg-card-light); 
+            padding:0.75rem; 
+            border-radius:8px; 
+        }
+        .acoes { 
+            display:flex; 
+            gap:0.5rem; 
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        @media (min-width: 768px) {
+            .topbar {
+                flex-direction: row;
+            }
+            .acoes {
+                justify-content: flex-end;
+            }
+        }
     </style>
     <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-GEVTH1XCMR"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-GEVTH1XCMR');
-</script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-GEVTH1XCMR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-GEVTH1XCMR');
+    </script>
 </head>
 <body>
     <div class="topbar">
@@ -51,10 +87,24 @@
 
     <script>
         // Helpers locais (copiados do app principal)
-        function parseLocalDate(dateStr) { if (!dateStr) return new Date(); const parts = dateStr.split('-').map(Number); return new Date(parts[0], parts[1]-1, parts[2]); }
-        function getLocalDateString(date = new Date()){ const d = new Date(date); const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${day}`; }
+        function parseLocalDate(dateStr) { 
+            if (!dateStr) return new Date(); 
+            const parts = dateStr.split('-').map(Number); 
+            return new Date(parts[0], parts[1]-1, parts[2]); 
+        }
+        
+        function getLocalDateString(date = new Date()){ 
+            const d = new Date(date); 
+            const y=d.getFullYear(), 
+                  m=String(d.getMonth()+1).padStart(2,'0'), 
+                  day=String(d.getDate()).padStart(2,'0'); 
+            return `${y}-${m}-${day}`; 
+        }
 
-        function qs(name){ const u = new URL(window.location.href); return u.searchParams.get(name); }
+        function qs(name){ 
+            const u = new URL(window.location.href); 
+            return u.searchParams.get(name); 
+        }
 
         function carregar() {
             const habitoId = qs('habitoId');
@@ -112,7 +162,9 @@
                 URL.revokeObjectURL(url);
             });
 
-            document.getElementById('btn-voltar').addEventListener('click', function(){ window.history.back(); });
+            document.getElementById('btn-voltar').addEventListener('click', function(){ 
+                window.history.back(); 
+            });
         }
 
         document.addEventListener('DOMContentLoaded', carregar);

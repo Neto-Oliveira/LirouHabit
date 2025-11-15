@@ -135,7 +135,7 @@ function inicializarSistemaHabit() {
     configurarEventListenersHabit();
     carregarConfiguracaoSalva();
     configurarAbas();
-    inicializarFiltros(); // ← ADICIONAR ESTA LINHA
+    inicializarFiltros();
 }
 
 function configurarAbas() {
@@ -245,6 +245,7 @@ function carregarBibliotecaPessoal() {
     
     lista.innerHTML = html;
 }
+
 function configurarEventListenersHabit() {
     // Botões de adicionar hábito
     document.addEventListener('click', function(e) {
@@ -291,7 +292,7 @@ function configurarEventListenersHabit() {
         }
     });
     
-    // Filtros - CORREÇÃO: Event listeners simplificados
+    // Filtros
     document.getElementById('filtro-categoria')?.addEventListener('change', filtrarHabitos);
     document.getElementById('busca-habito')?.addEventListener('input', filtrarHabitos);
     document.getElementById('btn-limpar-filtros')?.addEventListener('click', function() {
@@ -313,8 +314,8 @@ function configurarEventListenersHabit() {
         }
     });
 }
-// CORREÇÃO: Função de filtro funcionando corretamente
-// VERSÃO MELHORADA: Função de filtro com melhor feedback
+
+// Função de filtro funcionando corretamente
 function filtrarHabitos() {
     const filtroCategoria = document.getElementById('filtro-categoria').value;
     const busca = document.getElementById('busca-habito').value.toLowerCase().trim();
@@ -400,7 +401,6 @@ function inicializarFiltros() {
         }
     }, 100);
 }
-
 
 function adicionarHabitoDia(dia, categoria, index, tipo) {
     let habito;

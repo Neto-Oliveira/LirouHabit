@@ -1,16 +1,3 @@
-// Estado do usuário
-let estadoUsuario = {
-    dataAtual: getLocalDateString(),
-    diaAtual: null,
-    progresso: {},
-    streak: 0,
-    diasProdutivos: 0,
-    inicioSistema: getLocalDateString(),
-    configuracaoInicial: localStorage.getItem('configuracaoInicial') || null,
-    jaConfigurado: localStorage.getItem('configuracaoJaRealizada') === 'true',
-    recompensasLiberadas: JSON.parse(localStorage.getItem('recompensasLiberadas') || '{}') // NOVO: Controla recompensas
-};
-
 // Helpers para trabalhar com datas no fuso local (evita problemas com toISOString()/UTC)
 function getLocalDateString(date = new Date()) {
     const d = new Date(date);
@@ -26,6 +13,19 @@ function parseLocalDate(dateStr) {
     const parts = dateStr.split('-').map(Number);
     return new Date(parts[0], parts[1] - 1, parts[2]);
 }
+
+// Estado do usuário
+let estadoUsuario = {
+    dataAtual: getLocalDateString(),
+    diaAtual: null,
+    progresso: {},
+    streak: 0,
+    diasProdutivos: 0,
+    inicioSistema: getLocalDateString(),
+    configuracaoInicial: localStorage.getItem('configuracaoInicial') || null,
+    jaConfigurado: localStorage.getItem('configuracaoJaRealizada') === 'true',
+    recompensasLiberadas: JSON.parse(localStorage.getItem('recompensasLiberadas') || '{}')
+};
 
 // Inicialização
 document.addEventListener('DOMContentLoaded', function() {
@@ -43,12 +43,46 @@ function inicializarSistemaUsuario() {
         return;
     }
     
+    // IMPORTANTE: Resetar hábitos ao iniciar (garante que comecem desmarcados)
+    resetarHabitosNovoDia();
+    
     determinarDiaAtual();
     configurarEventListenersUsuario();
     carregarRotinaDoDia();
     calcularStreak();
     atualizarProgressoSemanal();
     atualizarContadores();
+}
+
+// NOVA FUNÇÃO: Resetar hábitos ao virar o dia
+function resetarHabitosNovoDia() {
+    const hoje = getLocalDateString();
+    
+    // Verificar se é um novo dia
+    if (!estadoUsuario.progresso[hoje]) {
+        estadoUsuario.progresso[hoje] = {
+            dia: estadoUsuario.diaAtual,
+            concluido: false,
+            habitos: {}
+        };
+        
+        // IMPORTANTE: Não copiar hábitos concluídos do dia anterior
+        // Os hábitos começam sempre desmarcados em um novo dia
+        
+        console.log('Novo dia detectado - Hábitos resetados');
+        localStorage.setItem('estadoUsuario', JSON.stringify(estadoUsuario));
+    } else {
+        // Se já existe progresso para hoje, garantir que não está herdando dados antigos
+        const progressoHoje = estadoUsuario.progresso[hoje];
+        
+        // Verificar se os dados são de hoje mesmo (não de um dia anterior)
+        const dataProgresso = Object.keys(estadoUsuario.progresso).find(data => data === hoje);
+        if (dataProgresso && progressoHoje.habitos) {
+            // Manter apenas os hábitos que foram realmente marcados hoje
+            // Não fazer nada - deixar como está (usuário já começou a marcar hoje)
+            console.log('Progresso de hoje já existe - mantendo estado atual');
+        }
+    }
 }
 
 function mostrarConfiguracaoInicial() {
@@ -155,7 +189,7 @@ function determinarDiaAtual() {
         estadoUsuario.diaAtual = diasDisponiveis[0];
     }
     
-    // Registrar o dia de hoje se não existir
+    // Registrar o dia de hoje se não existir (já é feito no resetarHabitosNovoDia)
     if (!estadoUsuario.progresso[estadoUsuario.dataAtual]) {
         estadoUsuario.progresso[estadoUsuario.dataAtual] = {
             dia: estadoUsuario.diaAtual,
@@ -175,6 +209,9 @@ function configurarEventListenersUsuario() {
         hoje.setDate(hoje.getDate() + 1);
         estadoUsuario.dataAtual = getLocalDateString(hoje);
         localStorage.setItem('estadoUsuario', JSON.stringify(estadoUsuario));
+        
+        // IMPORTANTE: Resetar hábitos ao avançar o dia
+        resetarHabitosNovoDia();
         
         mostrarFeedback('🚀 TESTE: Data avançada para o próximo dia!');
         determinarDiaAtual();
@@ -297,22 +334,24 @@ function mostrarModalRecompensa(recompensa) {
         align-items: center;
         z-index: 10000;
         animation: fadeIn 0.3s ease;
+        padding: 1rem;
     `;
     
     modal.innerHTML = `
         <div class="modal-content" style="
             background: var(--bg-card);
-            padding: 2rem;
+            padding: 1.5rem;
             border-radius: var(--border-radius);
             text-align: center;
             border: 3px solid var(--verde-principal);
             max-width: 400px;
             margin: 1rem;
             animation: scaleIn 0.3s ease;
+            width: 100%;
         ">
-            <div style="font-size: 4rem; margin-bottom: 1rem;">🎉</div>
+            <div style="font-size: 3rem; margin-bottom: 1rem;">🎉</div>
             <h2 style="color: var(--verde-principal); margin-bottom: 1rem;">Parabéns!</h2>
-            <p style="margin-bottom: 1.5rem; font-size: 1.1rem;">Você completou todas as tarefas de hoje!</p>
+            <p style="margin-bottom: 1.5rem; font-size: 1rem;">Você completou todas as tarefas de hoje!</p>
             <div style="
                 background: var(--roxo-suave);
                 padding: 1rem;
@@ -321,11 +360,12 @@ function mostrarModalRecompensa(recompensa) {
                 margin-bottom: 1.5rem;
             ">
                 <strong style="color: var(--roxo-principal);">🎁 Recompensa Liberada:</strong>
-                <p style="margin-top: 0.5rem; font-size: 1.2rem;">${recompensa}</p>
+                <p style="margin-top: 0.5rem; font-size: 1.1rem;">${recompensa}</p>
             </div>
             <button class="btn-principal" id="fechar-modal" style="
                 padding: 1rem 2rem;
-                font-size: 1.1rem;
+                font-size: 1rem;
+                width: 100%;
             ">
                 Continuar
             </button>
@@ -730,25 +770,6 @@ function carregarHistoricoHabito(habitoId) {
             });
         }
     }
-
-    // Botão para abrir a página separada de histórico
-    const abrirBtnId = 'abrir-historico-pagina';
-    let abrirBtn = document.getElementById(abrirBtnId);
-    if (!abrirBtn) {
-        abrirBtn = document.createElement('button');
-        /* abrirBtn.id = abrirBtnId;
-        abrirBtn.className = 'btn-secundario'; */
-        /* abrirBtn.style.marginTop = '0.75rem'; */
-        /* abrirBtn.textContent = 'Abrir em nova página'; */
-        /* if (lista) lista.parentNode.insertBefore(abrirBtn, lista.nextSibling); */
-    }
-
-    abrirBtn.onclick = function() {
-        const url = new URL(window.location.href);
-        // passar apenas o habitoId na query para a nova página
-        const habitoParam = encodeURIComponent(habitoId);
-        window.open(`historico.html?habitoId=${habitoParam}`, '_blank');
-    };
 }
 
 function abrirDrawerHistorico() {

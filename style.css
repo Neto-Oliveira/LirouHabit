@@ -35,14 +35,14 @@ body {
 /* ===== HEADER ===== */
 header {
     background: rgba(10, 10, 10, 0.95);
-    padding: 2rem;
+    padding: 1rem;
     text-align: center;
     border-bottom: 3px solid var(--verde-principal);
     backdrop-filter: blur(10px);
 }
 
-h1 {
-    font-size: 2.5rem;
+.header-content h1 {
+    font-size: 1.5rem;
     margin-bottom: 0.5rem;
     color: var(--verde-principal);
     font-weight: bold;
@@ -50,14 +50,14 @@ h1 {
 
 header p {
     color: var(--text-muted);
-    font-size: 1.1rem;
+    font-size: 0.9rem;
 }
 
 /* ===== MAIN CONTENT ===== */
 main {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 2rem;
+    padding: 1rem;
 }
 
 section {
@@ -69,18 +69,21 @@ section {
     display: flex;
     margin-bottom: 1rem;
     border-bottom: 2px solid var(--bg-card-light);
+    flex-direction: column;
+    gap: 0.5rem;
 }
 
 .aba {
     background: var(--bg-card);
     color: var(--text-light);
     border: none;
-    padding: 1rem 2rem;
+    padding: 1rem;
     cursor: pointer;
     transition: var(--transition);
-    border-radius: 8px 8px 0 0;
-    margin-right: 0.5rem;
+    border-radius: var(--border-radius);
     border: 1px solid transparent;
+    text-align: center;
+    width: 100%;
 }
 
 .aba.ativa {
@@ -233,7 +236,7 @@ button:active {
 /* ===== MENSAGENS INICIAIS ===== */
 .mensagem-inicial {
     text-align: center;
-    padding: 3rem 2rem;
+    padding: 2rem 1rem;
     background: var(--bg-card);
     border-radius: var(--border-radius);
     border: 2px dashed var(--bg-card-light);
@@ -252,7 +255,7 @@ button:active {
 /* ===== CABEÇALHO DO DIA ===== */
 .cabecalho-treino {
     text-align: center;
-    padding: 1.5rem;
+    padding: 1rem;
     background: var(--bg-card);
     border-radius: var(--border-radius) var(--border-radius) 0 0;
     border-bottom: 2px solid var(--verde-principal);
@@ -276,7 +279,7 @@ button:active {
 
 .exercicio-aluno {
     background: var(--bg-card-light);
-    padding: 1.25rem;
+    padding: 1rem;
     margin: 0.75rem 0;
     border-radius: var(--border-radius);
     display: flex;
@@ -285,6 +288,9 @@ button:active {
     border-left: 4px solid var(--verde-principal);
     transition: var(--transition);
     border: 1px solid transparent;
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
 }
 
 .exercicio-aluno:hover {
@@ -365,27 +371,27 @@ button:active {
 /* ===== PROGRESSO SEMANAL ===== */
 .progresso-semanal {
     background: var(--bg-card);
-    padding: 1.5rem;
+    padding: 1rem;
     border-radius: var(--border-radius);
     margin-top: 2rem;
 }
 
 .progresso-semanal h3 {
     color: var(--verde-principal);
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
     text-align: center;
 }
 
 .progresso-dias {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 1rem;
-    margin: 1.5rem 0;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    margin: 1rem 0;
 }
 
 .dia-progresso {
     background: var(--bg-card-light);
-    padding: 1.25rem;
+    padding: 1rem;
     border-radius: var(--border-radius);
     text-align: center;
     transition: var(--transition);
@@ -405,7 +411,7 @@ button:active {
 .dia-progresso span:first-child {
     display: block;
     font-weight: bold;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.5rem;
     color: var(--text-light);
 }
 
@@ -413,7 +419,7 @@ button:active {
     background: var(--bg-card);
     border-radius: 10px;
     height: 12px;
-    margin: 0.75rem 0;
+    margin: 0.5rem 0;
     overflow: hidden;
     position: relative;
 }
@@ -434,9 +440,11 @@ button:active {
 .resumo-semanal {
     display: flex;
     justify-content: space-between;
-    margin-top: 1.5rem;
-    padding-top: 1.5rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
     border-top: 1px solid var(--bg-card-light);
+    flex-direction: column;
+    gap: 0.75rem;
 }
 
 .resumo-semanal div {
@@ -444,6 +452,7 @@ button:active {
     padding: 1rem;
     border-radius: var(--border-radius);
     font-weight: bold;
+    text-align: center;
 }
 
 #contador-semanal {
@@ -457,7 +466,7 @@ button:active {
 /* ===== BIBLIOTECA DE HÁBITOS ===== */
 .biblioteca-exercicios, .biblioteca-pessoal {
     background: var(--bg-card);
-    padding: 1.5rem;
+    padding: 1rem;
     border-radius: var(--border-radius);
     margin-bottom: 2rem;
 }
@@ -470,8 +479,13 @@ button:active {
 .filtros {
     display: flex;
     gap: 1rem;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
     flex-wrap: wrap;
+    background: var(--bg-card-light);
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--bg-card);
+    flex-direction: column;
 }
 
 .filtros select, .filtros input {
@@ -480,8 +494,8 @@ button:active {
     border: 1px solid var(--bg-card-light);
     background: var(--bg-dark);
     color: var(--text-light);
-    min-width: 200px;
     transition: var(--transition);
+    width: 100%;
 }
 
 .filtros select:focus, .filtros input:focus {
@@ -491,7 +505,6 @@ button:active {
 
 .filtros input {
     flex: 1;
-    min-width: 250px;
 }
 
 .lista-exercicios {
@@ -504,7 +517,7 @@ button:active {
 }
 
 .grupo-biblioteca {
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
 }
 
 .grupo-biblioteca h5 {
@@ -517,7 +530,7 @@ button:active {
 
 .exercicios-grupo {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    grid-template-columns: 1fr;
     gap: 0.75rem;
 }
 
@@ -531,6 +544,8 @@ button:active {
     transition: var(--transition);
     border-left: 3px solid var(--verde-principal);
     border: 1px solid transparent;
+    flex-direction: column;
+    gap: 0.75rem;
 }
 
 .exercicio-biblioteca:hover {
@@ -564,29 +579,29 @@ button:active {
 
 /* ===== ADICIONAR HÁBITO PESSOAL ===== */
 .adicionar-exercicio-pessoal {
-    display: grid;
-    grid-template-columns: 2fr 1fr 1fr 1fr 2fr auto;
-    gap: 0.5rem;
     margin-bottom: 1.5rem;
-    align-items: end;
 }
 
-.adicionar-exercicio-pessoal input, .adicionar-exercicio-pessoal select {
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.form-grid input, .form-grid select {
     padding: 0.75rem;
     border-radius: var(--border-radius);
     border: 1px solid var(--bg-card-light);
     background: var(--bg-dark);
     color: var(--text-light);
     transition: var(--transition);
+    width: 100%;
 }
 
-.adicionar-exercicio-pessoal input:focus, .adicionar-exercicio-pessoal select:focus {
+.form-grid input:focus, .form-grid select:focus {
     outline: none;
     border-color: var(--verde-principal);
-}
-
-.adicionar-exercicio-pessoal button {
-    white-space: nowrap;
 }
 
 .sem-exercicios {
@@ -599,7 +614,7 @@ button:active {
 /* ===== ROTINAS DIÁRIAS ===== */
 .treinos-personalizados {
     background: var(--bg-card);
-    padding: 1.5rem;
+    padding: 1rem;
     border-radius: var(--border-radius);
     margin-bottom: 2rem;
 }
@@ -611,30 +626,32 @@ button:active {
 
 .subtitulo {
     color: var(--text-muted);
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
     font-size: 0.9rem;
 }
 
 .scroll-horizontal {
     overflow-x: auto;
-    margin: 1rem 0;
-    padding-bottom: 1rem;
+    margin: 0 -1rem;
+    padding: 0 1rem 1rem;
 }
 
 .grupos-treino-scroll {
     display: flex;
-    gap: 1.5rem;
+    gap: 1rem;
     min-width: max-content;
     padding: 0.5rem;
+    flex-direction: column;
 }
 
 .grupo {
     background: var(--bg-card-light);
-    padding: 1.5rem;
+    padding: 1rem;
     border-radius: var(--border-radius);
-    min-width: 320px;
     border: 2px solid var(--bg-card);
     transition: var(--transition);
+    min-width: auto;
+    width: 100%;
 }
 
 .grupo:hover {
@@ -648,8 +665,8 @@ button:active {
 
 .grupo-header h4 {
     color: var(--verde-principal);
-    margin-bottom: 0.75rem;
-    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
 }
 
 .nome-treino {
@@ -688,8 +705,8 @@ button:active {
 }
 
 .exercicios-lista {
-    min-height: 300px;
-    max-height: 400px;
+    min-height: 200px;
+    max-height: 300px;
     overflow-y: auto;
     margin: 1rem 0;
     padding: 0.5rem;
@@ -701,13 +718,15 @@ button:active {
 .exercicio-selecionado {
     background: var(--bg-card);
     padding: 1rem;
-    margin: 0.75rem 0;
+    margin: 0.5rem 0;
     border-radius: var(--border-radius);
     display: flex;
     justify-content: space-between;
     align-items: center;
     border-left: 3px solid var(--verde-principal);
     transition: var(--transition);
+    flex-direction: column;
+    gap: 1rem;
 }
 
 .exercicio-selecionado:hover {
@@ -752,6 +771,8 @@ button:active {
     margin-top: 1rem;
     padding-top: 1rem;
     border-top: 1px solid var(--bg-card);
+    flex-direction: column;
+    gap: 0.5rem;
 }
 
 .contador {
@@ -767,37 +788,39 @@ button:active {
     justify-content: center;
     margin: 2rem 0;
     flex-wrap: wrap;
+    flex-direction: column;
 }
 
 .acoes button {
-    min-width: 180px;
+    min-width: auto;
     font-size: 1rem;
-    padding: 1rem 2rem;
+    padding: 1rem;
+    width: 100%;
 }
 
 /* ===== PRÉ-VISUALIZAÇÃO ===== */
 .preview-treino {
     background: var(--bg-card);
-    padding: 1.5rem;
+    padding: 1rem;
     border-radius: var(--border-radius);
     margin-top: 2rem;
 }
 
 .preview-treino h2 {
     color: var(--verde-principal);
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
     text-align: center;
 }
 
 .preview-lista {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: 1fr;
+    gap: 1rem;
 }
 
 .preview-dia {
     background: var(--bg-card-light);
-    padding: 1.5rem;
+    padding: 1rem;
     border-radius: var(--border-radius);
     border: 2px solid var(--bg-card);
     transition: var(--transition);
@@ -855,13 +878,14 @@ button:active {
     right: 20px;
     background: var(--verde-principal);
     color: var(--bg-dark);
-    padding: 1rem 2rem;
+    padding: 1rem 1.5rem;
     border-radius: var(--border-radius);
     animation: slideIn 0.3s ease;
     z-index: 1000;
     font-weight: bold;
     box-shadow: var(--shadow-hover);
     border: 2px solid var(--verde-claro);
+    max-width: 300px;
 }
 
 @keyframes slideIn {
@@ -889,7 +913,7 @@ button:active {
 /* ===== FOOTER ===== */
 footer {
     background: rgba(10, 10, 10, 0.95);
-    padding: 2rem;
+    padding: 1.5rem;
     text-align: center;
     border-top: 1px solid var(--bg-card-light);
     margin-top: 3rem;
@@ -919,123 +943,10 @@ footer p {
     background: var(--verde-claro);
 }
 
-/* ===== RESPONSIVIDADE ===== */
-@media (max-width: 768px) {
-    main {
-        padding: 1rem;
-    }
-    
-    h1 {
-        font-size: 2rem;
-    }
-    
-    header {
-        padding: 1.5rem 1rem;
-    }
-    
-    .botoes-teste {
-        padding: 1rem;
-    }
-    
-    .progresso-dias {
-        grid-template-columns: 1fr;
-    }
-    
-    .resumo-semanal {
-        flex-direction: column;
-        gap: 1rem;
-    }
-    
-    .exercicios-grupo {
-        grid-template-columns: 1fr;
-    }
-    
-    .grupos-treino-scroll {
-        flex-direction: column;
-    }
-    
-    .grupo {
-        min-width: auto;
-    }
-    
-    .filtros {
-        flex-direction: column;
-    }
-    
-    .filtros select, .filtros input {
-        min-width: auto;
-        width: 100%;
-    }
-    
-    .acoes {
-        flex-direction: column;
-    }
-    
-    .acoes button {
-        min-width: auto;
-        width: 100%;
-    }
-    
-    .exercicio-biblioteca {
-        flex-direction: column;
-        gap: 1rem;
-        align-items: stretch;
-    }
-    
-    .exercicio-acoes {
-        justify-content: center;
-    }
-    
-    .exercicio-selecionado {
-        flex-direction: column;
-        gap: 1rem;
-        align-items: stretch;
-    }
-    
-    .exercicio-config {
-        justify-content: center;
-    }
-    
-    .adicionar-exercicio-pessoal {
-        grid-template-columns: 1fr;
-    }
-    
-    .abas-biblioteca {
-        flex-direction: column;
-    }
-    
-    .aba {
-        margin-right: 0;
-        margin-bottom: 0.5rem;
-        border-radius: var(--border-radius);
-    }
-}
-
-@media (max-width: 480px) {
-    h1 {
-        font-size: 1.75rem;
-    }
-    
-    .cabecalho-treino {
-        padding: 1rem;
-    }
-    
-    .exercicio-aluno {
-        padding: 1rem;
-        flex-direction: column;
-        gap: 1rem;
-        text-align: center;
-    }
-    
-    .preview-lista {
-        grid-template-columns: 1fr;
-    }
-}
-
 /* ===== CONFIGURAÇÃO INICIAL ===== */
 .configuracao-inicial {
     text-align: center;
-    padding: 3rem 2rem;
+    padding: 2rem 1rem;
     background: var(--bg-card);
     border-radius: var(--border-radius);
     border: 2px solid var(--verde-principal);
@@ -1048,14 +959,14 @@ footer p {
 
 .configuracao-inicial p {
     color: var(--text-light);
-    margin-bottom: 2rem;
-    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+    font-size: 1rem;
 }
 
 .opcoes-treino {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.75rem;
     max-width: 500px;
     margin: 0 auto;
 }
@@ -1064,13 +975,13 @@ footer p {
     background: var(--bg-card-light);
     color: var(--text-light);
     border: 2px solid var(--verde-principal);
-    padding: 1.5rem;
+    padding: 1rem;
     border-radius: var(--border-radius);
     font-weight: bold;
     cursor: pointer;
     transition: var(--transition);
-    font-size: 1rem;
-    text-align: left;
+    font-size: 0.9rem;
+    text-align: center;
 }
 
 .btn-treino-inicial:hover {
@@ -1080,10 +991,10 @@ footer p {
 }
 
 .info-configuracao {
-    font-size: 0.9rem !important;
+    font-size: 0.8rem !important;
     color: var(--text-muted) !important;
     font-style: italic;
-    margin-top: 2rem !important;
+    margin-top: 1.5rem !important;
 }
 
 /* ===== BOTÃO DE HISTÓRICO ===== */
@@ -1127,7 +1038,7 @@ footer p {
 }
 
 .contador-academia .numero {
-    font-size: 2rem;
+    font-size: 1.5rem;
     font-weight: bold;
     color: var(--verde-principal);
 }
@@ -1144,14 +1055,14 @@ footer p {
 
 .ciclo-treinos {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: 1fr;
     gap: 1rem;
-    margin: 1.5rem 0;
+    margin: 1rem 0;
 }
 
 .treino-ciclo {
     background: var(--bg-card-light);
-    padding: 1.5rem;
+    padding: 1rem;
     border-radius: var(--border-radius);
     border-left: 4px solid var(--verde-principal);
 }
@@ -1245,19 +1156,19 @@ footer p {
 .info-card {
     border: solid 1px var(--verde-principal);
     color: white;
-    padding: 1.5rem;
+    padding: 1rem;
     border-radius: 10px;
     box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
 }
 
 .info-card h3 {
     margin: 0 0 1rem 0;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
 }
 
 .info-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: 1fr;
     gap: 1rem;
 }
 
@@ -1265,6 +1176,8 @@ footer p {
     display: flex;
     align-items: flex-start;
     gap: 0.75rem;
+    flex-direction: column;
+    text-align: center;
 }
 
 .info-item i {
@@ -1335,50 +1248,27 @@ footer p {
     color: var(--verde-principal);
 }
 
-.form-grid {
-    display: grid;
-    grid-template-columns: 2fr 1fr 1fr 1fr auto;
-    gap: 0.5rem;
-    margin-bottom: 1.5rem;
-    align-items: end;
-}
-
-.form-grid input, .form-grid select {
-    padding: 0.75rem;
-    border-radius: var(--border-radius);
-    border: 1px solid var(--bg-card-light);
-    background: var(--bg-dark);
-    color: var(--text-light);
-    transition: var(--transition);
-}
-
-.form-grid input:focus, .form-grid select:focus {
-    outline: none;
-    border-color: var(--verde-principal);
-}
-
 .preview-placeholder {
     text-align: center;
-    padding: 3rem;
+    padding: 2rem;
     color: var(--text-muted);
 }
 
 .preview-placeholder i {
-    font-size: 3rem;
+    font-size: 2rem;
     margin-bottom: 1rem;
     color: var(--verde-principal);
 }
 
 .recompensa-info {
     background: var(--roxo-suave);
-    padding: 0.5rem;
+    padding: 0.75rem;
     border-radius: 4px;
     margin-top: 0.5rem;
     font-size: 0.8rem;
     color: var(--roxo-principal);
     border-left: 2px solid var(--roxo-principal);
 }
-
 
 /* ===== ESTILOS PARA RECOMPENSAS ===== */
 .recompensa-liberada {
@@ -1389,9 +1279,9 @@ footer p {
 
 .recompensa-info {
     background: var(--roxo-suave);
-    padding: 1rem;
+    padding: 0.75rem;
     border-radius: var(--border-radius);
-    margin-top: 1rem;
+    margin-top: 0.5rem;
     border-left: 4px solid var(--roxo-principal);
     font-weight: bold;
 }
@@ -1408,65 +1298,13 @@ footer p {
 .filtros {
     display: flex;
     gap: 1rem;
-    margin-bottom: 1.5rem;
-    flex-wrap: wrap;
-    align-items: center;
-}
-
-.filtros select, .filtros input {
-    padding: 0.75rem;
-    border-radius: var(--border-radius);
-    border: 1px solid var(--bg-card-light);
-    background: var(--bg-dark);
-    color: var(--text-light);
-    min-width: 200px;
-    transition: var(--transition);
-    flex: 1;
-}
-
-.filtros input {
-    min-width: 250px;
-}
-
-.filtros select:focus, .filtros input:focus {
-    outline: none;
-    border-color: var(--verde-principal);
-    box-shadow: 0 0 0 2px rgba(46, 204, 113, 0.2);
-}
-
-/* ===== ANIMAÇÕES ADICIONAIS ===== */
-@keyframes fadeOut {
-    from { opacity: 1; }
-    to { opacity: 0; }
-}
-
-/* ===== RESPONSIVIDADE MELHORADA ===== */
-@media (max-width: 768px) {
-    .filtros {
-        flex-direction: column;
-    }
-    
-    .filtros select, .filtros input {
-        min-width: auto;
-        width: 100%;
-    }
-    
-    .recompensa-info {
-        padding: 0.75rem;
-        font-size: 0.9rem;
-    }
-}
-
-
-.filtros {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
     flex-wrap: wrap;
     align-items: center;
     background: var(--bg-card-light);
     padding: 1rem;
     border-radius: var(--border-radius);
+    flex-direction: column;
 }
 
 .filtros select, .filtros input {
@@ -1475,13 +1313,12 @@ footer p {
     border: 1px solid var(--bg-card-light);
     background: var(--bg-dark);
     color: var(--text-light);
-    min-width: 200px;
     transition: var(--transition);
-    flex: 1;
+    width: 100%;
 }
 
 .filtros input {
-    min-width: 250px;
+    flex: 1;
 }
 
 .filtros select:focus, .filtros input:focus {
@@ -1512,90 +1349,6 @@ footer p {
     color: var(--verde-principal);
 }
 
-
-
-/* ===== MELHORIAS NA BUSCA ===== */
-.filtros {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-    flex-wrap: wrap;
-    align-items: center;
-    background: var(--bg-card-light);
-    padding: 1.5rem;
-    border-radius: var(--border-radius);
-    border: 1px solid var(--bg-card);
-}
-
-.filtros select, .filtros input {
-    padding: 0.75rem 1rem;
-    border-radius: var(--border-radius);
-    border: 2px solid var(--bg-card);
-    background: var(--bg-dark);
-    color: var(--text-light);
-    transition: var(--transition);
-    font-size: 0.9rem;
-}
-
-.filtros select {
-    min-width: 200px;
-    flex: 1;
-}
-
-.filtros input {
-    min-width: 250px;
-    flex: 2;
-}
-
-.filtros select:focus, .filtros input:focus {
-    outline: none;
-    border-color: var(--verde-principal);
-    box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.1);
-}
-
-/* Indicador de busca ativa */
-.busca-ativa {
-    border-color: var(--verde-principal) !important;
-    background: rgba(46, 204, 113, 0.05) !important;
-}
-
-/* Mensagem quando não encontra resultados */
-.sem-resultados {
-    text-align: center;
-    padding: 3rem 2rem;
-    color: var(--text-muted);
-    font-style: italic;
-    grid-column: 1 / -1;
-    background: var(--bg-card-light);
-    border-radius: var(--border-radius);
-    margin: 1rem 0;
-}
-
-.sem-resultados i {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-    display: block;
-    color: var(--verde-principal);
-    opacity: 0.5;
-}
-
-.sem-resultados p {
-    font-size: 1.1rem;
-    margin-bottom: 0.5rem;
-    color: var(--text-light);
-}
-
-.sem-resultados small {
-    font-size: 0.9rem;
-    opacity: 0.7;
-}
-
-/* Estilo para quando há filtros ativos */
-.filtros-ativos {
-    border-color: var(--verde-principal);
-    background: rgba(46, 204, 113, 0.05);
-}
-
 /* ===== DRAWER / PAINEL LATERAL PARA HISTÓRICO ===== */
 .drawer-historico {
     position: fixed;
@@ -1615,8 +1368,8 @@ footer p {
 .drawer-panel {
     position: absolute;
     top: 0;
-    right: -420px;
-    width: 380px;
+    right: -100%;
+    width: 100%;
     height: 100%;
     background: var(--bg-card);
     color: var(--text-light);
@@ -1647,7 +1400,193 @@ footer p {
 .hist-lista { display:flex; flex-direction:column; gap:0.25rem; }
 .hist-lista .item-data { background: var(--bg-card-light); padding:0.5rem; border-radius:8px; font-size:0.95rem; }
 
+/* ===== MELHORIAS PARA TABLETS ===== */
+@media (min-width: 768px) {
+    header {
+        padding: 1.5rem;
+    }
+    
+    .header-content h1 {
+        font-size: 2rem;
+    }
+    
+    main {
+        padding: 1.5rem;
+    }
+    
+    .abas-biblioteca {
+        flex-direction: row;
+    }
+    
+    .aba {
+        width: auto;
+    }
+    
+    .filtros {
+        flex-direction: row;
+    }
+    
+    .filtros input {
+        flex: 2;
+    }
+    
+    .filtros select {
+        flex: 1;
+    }
+    
+    .exercicios-grupo {
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    }
+    
+    .exercicio-biblioteca {
+        flex-direction: row;
+        align-items: flex-start;
+    }
+    
+    .exercicio-acoes {
+        justify-content: flex-end;
+    }
+    
+    .grupos-treino-scroll {
+        flex-direction: row;
+        overflow-x: auto;
+    }
+    
+    .grupo {
+        min-width: 300px;
+        width: auto;
+    }
+    
+    .form-grid {
+        grid-template-columns: 2fr 1fr 1fr auto;
+    }
+    
+    .acoes {
+        flex-direction: row;
+    }
+    
+    .acoes button {
+        width: auto;
+    }
+    
+    .preview-lista, .ciclo-treinos {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    }
+    
+    .progresso-dias {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+    
+    .resumo-semanal {
+        flex-direction: row;
+    }
+    
+    .exercicio-aluno {
+        flex-direction: row;
+        text-align: left;
+    }
+    
+    .info-grid {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    }
+    
+    .info-item {
+        flex-direction: row;
+        text-align: left;
+    }
+    
+    .drawer-panel {
+        width: 380px;
+        right: -420px;
+    }
+}
+
+/* ===== MELHORIAS PARA DESKTOP ===== */
+@media (min-width: 1024px) {
+    .exercicios-grupo {
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    }
+    
+    .grupo {
+        min-width: 320px;
+    }
+    
+    .form-grid {
+        grid-template-columns: 2fr 1fr 1fr 1fr auto;
+    }
+    
+    header {
+        padding: 2rem;
+    }
+    
+    .header-content h1 {
+        font-size: 2.5rem;
+    }
+    
+    main {
+        padding: 2rem;
+    }
+}
+
+/* ===== ANIMAÇÕES ADICIONAIS ===== */
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+/* ===== RESPONSIVIDADE MELHORADA ===== */
 @media (max-width: 768px) {
-    .drawer-panel { width: 100%; right: -100%; }
-    .drawer-historico[aria-hidden="false"] .drawer-panel { right: 0; }
+    .filtros {
+        flex-direction: column;
+    }
+    
+    .filtros select, .filtros input {
+        min-width: auto;
+        width: 100%;
+    }
+    
+    .recompensa-info {
+        padding: 0.75rem;
+        font-size: 0.9rem;
+    }
+    
+    .exercicio-controle {
+        display: flex;
+        justify-content: center;
+    }
+}
+
+/* ===== EXERCÍCIO AÇÕES RESPONSIVO ===== */
+.exercicio-acoes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    justify-content: center;
+}
+
+.exercicio-acoes .btn-add {
+    flex: 1;
+    min-width: 40px;
+    font-size: 0.7rem;
+    padding: 0.3rem 0.5rem;
+}
+
+/* Controles de grupo responsivos */
+.controles-grupo {
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+@media (min-width: 768px) {
+    .exercicio-acoes {
+        justify-content: flex-end;
+    }
+    
+    .exercicio-acoes .btn-add {
+        flex: none;
+    }
+    
+    .controles-grupo {
+        flex-direction: row;
+    }
 }
