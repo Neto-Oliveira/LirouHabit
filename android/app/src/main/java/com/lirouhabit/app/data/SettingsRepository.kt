@@ -1,0 +1,53 @@
+package com.lirouhabit.app.data
+
+import android.content.Context
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.preferencesDataStore
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+
+private val Context.dataStore by preferencesDataStore(name = "lirouhabit_settings")
+
+class SettingsRepository(private val context: Context) {
+
+    companion object {
+        private val KEY_DEFAULT_LIMIT = intPreferencesKey("default_limit_minutes")
+        private val KEY_MONITOR_ON = booleanPreferencesKey("monitor_enabled")
+        private val KEY_ONBOARDING_DONE = booleanPreferencesKey("onboarding_done")
+        private val KEY_ESCALATION = booleanPreferencesKey("escalation_on")
+        const val DEFAULT_LIMIT = 5
+    }
+
+    val defaultLimit: Flow<Int> =
+        context.dataStore.data.map { it[KEY_DEFAULT_LIMIT] ?: DEFAULT_LIMIT }
+
+    val monitorEnabled: Flow<Boolean> =
+        context.dataStore.data.map { it[KEY_MONITOR_ON] ?: false }
+
+    val onboardingDone: Flow<Boolean> =
+        context.dataStore.data.map { it[KEY_ONBOARDING_DONE] ?: false }
+
+    val escalationOn: Flow<Boolean> =
+        context.dataStore.data.map { it[KEY_ESCALATION] ?: true }
+
+    suspend fun isMonitorEnabledNow(): Boolean = monitorEnabled.first()
+
+    suspend fun setDefaultLimit(value: Int) {
+        context.dataStore.edit { it[KEY_DEFAULT_LIMIT] = value }
+    }
+
+    suspend fun setMonitorEnabled(value: Boolean) {
+        context.dataStore.edit { it[KEY_MONITOR_ON] = value }
+    }
+
+    suspend fun setOnboardingDone(value: Boolean) {
+        context.dataStore.edit { it[KEY_ONBOARDING_DONE] = value }
+    }
+
+    suspend fun setEscalationOn(value: Boolean) {
+        context.dataStore.edit { it[KEY_ESCALATION] = value }
+    }
+}

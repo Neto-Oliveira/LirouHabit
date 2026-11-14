@@ -1,0 +1,14 @@
+# Ferramentas locais de build (não versionar)
+android-sdk/
+tooling/
+
+# Android / Gradle
+android/.gradle/
+android/local.properties
+android/**/build/
+android/keystore/
+*.keystore
+
+# SO
+Thumbs.db
+.DS_Store
