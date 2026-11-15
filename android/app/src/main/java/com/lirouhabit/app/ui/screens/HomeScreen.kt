@@ -186,6 +186,9 @@ fun HomeScreen(vm: AppViewModel, nav: NavController) {
             NavCard(R.drawable.ic_chart, "Estatísticas", "Seu histórico de confronto") {
                 nav.navigate(Routes.STATS)
             }
+            NavCard(R.drawable.ic_chart, "Tempo por dia (tracker)", "Evolução do tempo em apps vilões") {
+                nav.navigate(Routes.TRACKER)
+            }
             NavCard(R.drawable.ic_gear, "Configurações", "Limites, agressividade e permissões") {
                 nav.navigate(Routes.SETTINGS)
             }

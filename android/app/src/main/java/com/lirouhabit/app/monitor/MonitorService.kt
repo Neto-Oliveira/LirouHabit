@@ -15,7 +15,9 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.lirouhabit.app.App
 import com.lirouhabit.app.MainActivity
+import com.lirouhabit.app.R
 import com.lirouhabit.app.data.AppDatabase
+import com.lirouhabit.app.data.DailyUsage
 import com.lirouhabit.app.data.InterventionEvent
 import com.lirouhabit.app.data.SettingsRepository
 import com.lirouhabit.app.data.TrackedApp
@@ -73,6 +75,18 @@ class MonitorService : Service() {
         private const val GRACE_MS = 2 * 60_000L // troca de aba não reseta a sessão
         const val ACTION_FORCE_MILESTONE = "com.lirouhabit.app.FORCE_MILESTONE"
 
+        // Estado compartilhado com o InterventionReceiver (vitória/derrota)
+        val firedMilestones = mutableMapOf<String, MutableSet<Int>>()
+        val cooldownUntil = mutableMapOf<String, Long>()
+
+        fun snooze(pkg: String, ms: Long) {
+            cooldownUntil[pkg] = System.currentTimeMillis() + ms
+        }
+
+        fun resetMilestone(pkg: String, minutes: Int) {
+            firedMilestones[pkg]?.remove(minutes)
+        }
+
         fun start(context: Context) {
             ContextCompat.startForegroundService(
                 context,
@@ -109,14 +123,17 @@ class MonitorService : Service() {
     private var accumulatedMs = 0L
     private var lastSeenAt = 0L
     private var lastTickAt = 0L
-    private val firedMilestones = mutableMapOf<String, MutableSet<Int>>()
-    private val cooldownUntil = mutableMapOf<String, Long>()
+    // firedMilestones e cooldownUntil agora vivem no companion (acessíveis pelo receiver)
 
     // Diagnóstico (tela secreta de desenvolvimento)
     private var lastLoggedForeground: String? = null
     private var lastPausedReason: String? = null
     private var lastLoggedMinute = 0
     private var lastStatusMinute = -1
+    // Tracker diário
+    private var dailyDate: String = ""
+    private val dailyMs = mutableMapOf<String, Long>()
+    private val lastPersistedMinute = mutableMapOf<String, Int>()
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -151,7 +168,7 @@ class MonitorService : Service() {
 
     private fun startAsForeground() {
         val notification = NotificationCompat.Builder(this, CHANNEL_STATUS)
-            .setSmallIcon(android.R.drawable.ic_dialog_alert)
+            .setSmallIcon(R.drawable.ic_bolt)
             .setContentTitle("LirouHabit vigiando")
             .setContentText("Monitor anti-procrastinação ativo")
             .setContentIntent(
@@ -175,6 +192,8 @@ class MonitorService : Service() {
         }
     }
 
+    @Volatile private var previousLimits: Map<String, Int> = emptyMap()
+
     private fun observeData() {
         scope.launch {
             settings.monitorEnabled.collect {
@@ -186,6 +205,18 @@ class MonitorService : Service() {
         scope.launch {
             db.trackedAppDao().all().collect { list ->
                 val enabled = list.filter { it.enabled }
+                // Se o limite de algum app mudou, reinicia a sessão desse app
+                for (app in enabled) {
+                    val old = previousLimits[app.packageName]
+                    if (old != null && old != app.limitMinutes && sessionPkg == app.packageName) {
+                        accumulatedMs = 0L
+                        firedMilestones.remove(app.packageName)
+                        lastLoggedMinute = 0
+                        lastPersistedMinute.remove(app.packageName)
+                        MonitorLog.add("limite alterado para ${app.limitMinutes}min — sessão reiniciada")
+                    }
+                }
+                previousLimits = enabled.associate { it.packageName to it.limitMinutes }
                 trackedApps = enabled.associateBy { it.packageName }
                 MonitorLog.add(
                     "apps vilões (${enabled.size}): " +
@@ -260,6 +291,35 @@ class MonitorService : Service() {
         lastSeenAt = now
         sessionApp = tracked.appName
         sessionMs = accumulatedMs
+
+        // Tracker diário: acumula tempo por dia em cada app vilão
+        val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+            .format(java.util.Date())
+        if (dailyDate != today) {
+            dailyDate = today
+            dailyMs.clear()
+            lastPersistedMinute.clear()
+        }
+        val prevDaily = dailyMs[tracked.packageName] ?: 0L
+        val newDaily = prevDaily + elapsed
+        dailyMs[tracked.packageName] = newDaily
+        val persistedMin = lastPersistedMinute[tracked.packageName] ?: -1
+        val newMin = (newDaily / 60_000L).toInt()
+        if (newMin > persistedMin) {
+            lastPersistedMinute[tracked.packageName] = newMin
+            scope.launch {
+                runCatching {
+                    db.dailyUsageDao().upsert(
+                        DailyUsage(
+                            date = today,
+                            packageName = tracked.packageName,
+                            appName = tracked.appName,
+                            totalMs = newDaily
+                        )
+                    )
+                }
+            }
+        }
 
         // Prova visual de que o tempo está acumulando (mesmo antes do marco)
         val wholeMinutes = (accumulatedMs / 60_000L).toInt()
@@ -405,7 +465,7 @@ class MonitorService : Service() {
     private fun updateStatusNotification(text: String = "Monitor anti-procrastinação ativo") {
         runCatching {
             val notification = NotificationCompat.Builder(this, CHANNEL_STATUS)
-                .setSmallIcon(android.R.drawable.ic_dialog_alert)
+                .setSmallIcon(R.drawable.ic_bolt)
                 .setContentTitle("LirouHabit vigiando")
                 .setContentText(text)
                 .setContentIntent(
@@ -448,14 +508,52 @@ class MonitorService : Service() {
     }
 
     private fun fireAlertNotification(app: TrackedApp, phrase: String, minutes: Int) {
+        val closeIntent = Intent(this, InterventionReceiver::class.java).apply {
+            action = InterventionReceiver.ACTION_CLOSE_APP
+            putExtra(InterventionReceiver.EXTRA_PKG, app.packageName)
+            putExtra(InterventionReceiver.EXTRA_APP, app.appName)
+            putExtra(InterventionReceiver.EXTRA_PHRASE, phrase)
+            putExtra(InterventionReceiver.EXTRA_MINUTES, minutes)
+        }
+        val ignoreIntent = Intent(this, InterventionReceiver::class.java).apply {
+            action = InterventionReceiver.ACTION_IGNORE
+            putExtra(InterventionReceiver.EXTRA_PKG, app.packageName)
+            putExtra(InterventionReceiver.EXTRA_APP, app.appName)
+            putExtra(InterventionReceiver.EXTRA_PHRASE, phrase)
+            putExtra(InterventionReceiver.EXTRA_MINUTES, minutes)
+        }
+        val dismissIntent = Intent(this, InterventionReceiver::class.java).apply {
+            action = InterventionReceiver.ACTION_DISMISS
+            putExtra(InterventionReceiver.EXTRA_PKG, app.packageName)
+            putExtra(InterventionReceiver.EXTRA_APP, app.appName)
+            putExtra(InterventionReceiver.EXTRA_PHRASE, phrase)
+            putExtra(InterventionReceiver.EXTRA_MINUTES, minutes)
+        }
+
+        val closePi = PendingIntent.getBroadcast(
+            this, app.packageName.hashCode() + 1, closeIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        val ignorePi = PendingIntent.getBroadcast(
+            this, app.packageName.hashCode() + 2, ignoreIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        val dismissPi = PendingIntent.getBroadcast(
+            this, app.packageName.hashCode() + 3, dismissIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
         val notification = NotificationCompat.Builder(this, CHANNEL_ALERT)
-            .setSmallIcon(android.R.drawable.ic_dialog_alert)
+            .setSmallIcon(R.drawable.ic_bolt)
             .setContentTitle("${app.appName} • $minutes min")
             .setContentText(phrase)
             .setStyle(NotificationCompat.BigTextStyle().bigText(phrase))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setAutoCancel(true)
+            .setDeleteIntent(dismissPi)
+            .addAction(R.drawable.ic_lock, "Fechar o app", closePi)
+            .addAction(R.drawable.ic_chain, "Ignorar", ignorePi)
             .build()
         runCatching {
             NotificationManagerCompat.from(this).notify(ALERT_NOTIF_ID, notification)

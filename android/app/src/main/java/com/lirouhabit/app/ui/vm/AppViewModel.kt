@@ -19,10 +19,12 @@ import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.lirouhabit.app.data.Dream
+import com.lirouhabit.app.data.DailyUsage
 import com.lirouhabit.app.data.InterventionEvent
 import com.lirouhabit.app.data.SettingsRepository
 import com.lirouhabit.app.data.TrackedApp
 import com.lirouhabit.app.data.Vice
+import com.lirouhabit.app.R
 import com.lirouhabit.app.lirouApp
 import com.lirouhabit.app.monitor.MonitorLog
 import com.lirouhabit.app.monitor.MonitorService
@@ -68,6 +70,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     val dreams: StateFlow<List<Dream>> = db.dreamDao().all().asState(emptyList())
     val vices: StateFlow<List<Vice>> = db.viceDao().all().asState(emptyList())
     val trackedApps: StateFlow<List<TrackedApp>> = db.trackedAppDao().all().asState(emptyList())
+    val dailyUsage: StateFlow<List<DailyUsage>> = db.dailyUsageDao().all().asState(emptyList())
     val events: StateFlow<List<InterventionEvent>> = db.eventDao().recent().asState(emptyList())
     val victories: StateFlow<Int> = db.eventDao().victories().asState(0)
     val defeats: StateFlow<Int> = db.eventDao().defeats().asState(0)
@@ -179,7 +182,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             minutes = minutes
         )
         val notification = NotificationCompat.Builder(ctx, MonitorService.CHANNEL_ALERT)
-            .setSmallIcon(android.R.drawable.ic_dialog_alert)
+            .setSmallIcon(R.drawable.ic_bolt)
             .setContentTitle("Instagram • $minutes min (TESTE)")
             .setContentText(phrase)
             .setStyle(NotificationCompat.BigTextStyle().bigText(phrase))
