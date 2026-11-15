@@ -7,7 +7,6 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
-import android.provider.Settings
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
@@ -26,12 +25,15 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 /**
- * Serviço em foreground que cronometra o uso contínuo dos apps vilões.
+ * Serviço em foreground que cronometra o uso dos apps vilões.
  *
- * Marcos por sessão no app (sem tela cheia no começo — a intervenção escala):
+ * Marcos por sessão (a intervenção escala — sem tela cheia no começo):
  *  - limite do app (default 5 min) → notificação reflexiva
  *  - 15 min → notificação mais pesada
  *  - 60 min → tela de bloqueio full-screen por cima do app
+ *
+ * Troca de aba/app: a sessão sobrevive por GRACE_MS (2 min). Saiu do vilão e
+ * voltou rápido → o cronômetro CONTINUA de onde parou.
  */
 class MonitorService : Service() {
 
@@ -51,6 +53,7 @@ class MonitorService : Service() {
         private const val MILESTONE_2_MIN = 15
         private const val MILESTONE_OVERLAY_MIN = 60
         private const val SNOOZE_AFTER_DEFEAT_MS = 5 * 60_000L
+        private const val GRACE_MS = 2 * 60_000L // troca de aba não reseta a sessão
 
         fun start(context: Context) {
             ContextCompat.startForegroundService(
@@ -76,8 +79,10 @@ class MonitorService : Service() {
     @Volatile private var topDream: String = ""
     @Volatile private var topVice: String = ""
 
-    private var currentPkg: String? = null
-    private var sessionStart = 0L
+    // Sessão atual (com graça de 2 min ao trocar de app)
+    private var sessionPkg: String? = null
+    private var accumulatedMs = 0L
+    private var lastSeenAt = 0L
     private val firedMilestones = mutableMapOf<String, MutableSet<Int>>()
     private val cooldownUntil = mutableMapOf<String, Long>()
 
@@ -163,32 +168,38 @@ class MonitorService : Service() {
             resetSession()
             return
         }
-        if (!Settings.canDrawOverlays(this) || !UsageMonitor.hasUsageAccess(this)) {
+        // Notificações NÃO dependem de overlay — só do acesso ao uso.
+        if (!UsageMonitor.hasUsageAccess(this)) {
             resetSession()
             return
         }
 
         val foreground = usageMonitor.currentForegroundApp() ?: return
-        if (foreground == packageName) return // o próprio LirouHabit não conta
-
-        val tracked = trackedApps[foreground]
-        if (tracked == null) {
-            resetSession()
-            return
-        }
+        if (foreground == packageName) return // LirouHabit aberto: pausa, não reseta
 
         val now = System.currentTimeMillis()
-        if (foreground != currentPkg) {
-            currentPkg = foreground
-            sessionStart = now
-            firedMilestones.remove(foreground)
+        val tracked = trackedApps[foreground]
+
+        if (tracked == null) {
+            // Fora do vilão: a sessão sobrevive durante a graça (troca rápida de aba)
+            if (sessionPkg != null && now - lastSeenAt > GRACE_MS) {
+                resetSession()
+            }
             return
         }
 
-        val elapsedMs = now - sessionStart
+        if (sessionPkg != foreground) {
+            // Vilão diferente (ou graça expirada): sessão nova
+            accumulatedMs = 0L
+            firedMilestones.remove(foreground)
+            sessionPkg = foreground
+        }
+        accumulatedMs += POLL_MS
+        lastSeenAt = now
+
         val fired = firedMilestones.getOrPut(foreground) { mutableSetOf() }
         val milestone = milestonesFor(tracked).firstOrNull {
-            elapsedMs >= it.minutes * 60_000L && it.minutes !in fired
+            accumulatedMs >= it.minutes * 60_000L && it.minutes !in fired
         } ?: return
 
         if (milestone.isOverlay) {
@@ -201,8 +212,8 @@ class MonitorService : Service() {
     }
 
     /**
-     * Monta os marcos da sessão: limite do app, depois 15 min, depois 1h (overlay).
-     * Marcos menores que o limite do app são ignorados.
+     * Marcos da sessão: limite do app → notificação, 15 min → notificação pesada,
+     * 60 min → overlay full-screen. Marcos menores que o limite do app são ignorados.
      */
     private fun milestonesFor(app: TrackedApp): List<Milestone> {
         val raw = buildList {
@@ -281,8 +292,9 @@ class MonitorService : Service() {
     }
 
     private fun resetSession() {
-        currentPkg = null
-        sessionStart = 0L
+        sessionPkg = null
+        accumulatedMs = 0L
+        lastSeenAt = 0L
     }
 
     private fun goHome() {

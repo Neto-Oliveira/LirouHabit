@@ -32,6 +32,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -46,6 +49,7 @@ import com.lirouhabit.app.ui.IconLabel
 import com.lirouhabit.app.ui.Routes
 import com.lirouhabit.app.ui.VictoryGreen
 import com.lirouhabit.app.ui.vm.AppViewModel
+import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -54,8 +58,15 @@ fun SettingsScreen(vm: AppViewModel, nav: NavController, onBack: () -> Unit) {
     val context = LocalContext.current
     val defaultLimit by vm.defaultLimit.collectAsState()
     val escalation by vm.escalationOn.collectAsState()
+    var detectedNow by remember { mutableStateOf("…") }
 
-    LaunchedEffect(Unit) { vm.refreshPermissions() }
+    LaunchedEffect(Unit) {
+        vm.refreshPermissions()
+        while (true) {
+            detectedNow = vm.detectForegroundNow()
+            delay(2_000)
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -136,6 +147,12 @@ fun SettingsScreen(vm: AppViewModel, nav: NavController, onBack: () -> Unit) {
                     PermissionStatus("Sobrepor outros apps", vm.permOverlay)
                     PermissionStatus("Notificações", vm.permNotif)
                     PermissionStatus("Bateria sem restrição", vm.permBattery)
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        "Detectando agora: $detectedNow",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                     Spacer(Modifier.height(10.dp))
                     OutlinedButton(
                         onClick = { nav.navigate(Routes.ONBOARDING) },

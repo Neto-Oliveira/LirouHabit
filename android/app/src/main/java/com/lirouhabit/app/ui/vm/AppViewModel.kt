@@ -41,6 +41,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     private val db = application.lirouApp.db
     private val settings = application.lirouApp.settings
+    private val usageMonitor = UsageMonitor(application)
 
     private fun <T> kotlinx.coroutines.flow.Flow<T>.asState(initial: T): StateFlow<T> =
         stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), initial)
@@ -128,7 +129,12 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         if (on) MonitorService.start(ctx) else MonitorService.stop(ctx)
     }
 
-    fun finishOnboarding() = viewModelScope.launch { settings.setOnboardingDone(true) }
+    /** Conclui o onboarding: marca como feito e já LIGA o monitor automaticamente. */
+    fun finishOnboarding() = viewModelScope.launch {
+        settings.setOnboardingDone(true)
+        settings.setMonitorEnabled(true)
+        MonitorService.start(getApplication())
+    }
     fun redoOnboarding() = viewModelScope.launch { settings.setOnboardingDone(false) }
 
     // ---------- Permissões ----------
@@ -136,6 +142,11 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     var permOverlay by mutableStateOf(false); private set
     var permNotif by mutableStateOf(false); private set
     var permBattery by mutableStateOf(false); private set
+
+    /** Diagnóstico: app em foreground agora — prova de que o acesso ao uso funciona. */
+    fun detectForegroundNow(): String =
+        runCatching { usageMonitor.currentForegroundApp() ?: "nada detectado" }
+            .getOrDefault("erro ao ler (permissão?)")
 
     fun refreshPermissions() {
         val ctx = getApplication<Application>()

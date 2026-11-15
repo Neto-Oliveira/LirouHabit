@@ -9,9 +9,11 @@ Também contém, na raiz, um protótipo web legado de rotinas/hábitos (HTML/JS 
   - `data/` — Room (entities, DAOs, AppDatabase) + DataStore (`SettingsRepository`)
   - `monitor/` — coração do app: `MonitorService` (foreground + polling UsageStats 2s;
     marcos por sessão: limite do app → notificação, 15 min → notificação pesada,
-    60 min → overlay full-screen), `UsageMonitor`, `OverlayManager` (ComposeView em
-    WindowManager), `BlockingOverlay` (15s de fricção p/ continuar), `PhraseBank`
-    (frases reflexivas em 3 níveis — nunca clichês), `BootReceiver`
+    60 min → overlay full-screen; sessão com graça de 2 min ao trocar de aba — o
+    cronômetro continua; loop exige SÓ acesso ao uso, overlay é checada só no marco
+    de 60 min), `UsageMonitor` (eventos + fallback por lastTimeUsed), `OverlayManager`
+    (ComposeView em WindowManager), `BlockingOverlay` (15s de fricção p/ continuar),
+    `PhraseBank` (frases reflexivas em 3 níveis — nunca clichês), `BootReceiver`
   - `ui/` — telas Compose em `ui/screens/`, `ui/vm/AppViewModel.kt` (VM único), `ui/Nav.kt`
   - fluxo de 1º uso: `IntroScreen` (apresentação de impacto) → `IntroDreamScreen`
     ("qual seu maior sonho?") → `IntroAppsScreen` (seleção múltipla de vilões) →
