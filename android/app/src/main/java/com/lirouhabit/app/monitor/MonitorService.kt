@@ -7,6 +7,9 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
@@ -46,7 +49,9 @@ class MonitorService : Service() {
 
     companion object {
         const val CHANNEL_STATUS = "monitor_status"
-        const val CHANNEL_ALERT = "intervention_alert"
+        // v2: ID novo força a recriação do canal em instalações antigas
+        // (som/vibração de canal ficam travados após a criação no Android 8+)
+        const val CHANNEL_ALERT = "intervention_alert_v2"
         private const val STATUS_NOTIF_ID = 1
         private const val ALERT_NOTIF_ID = 2
         private const val POLL_MS = 2_000L
@@ -252,6 +257,7 @@ class MonitorService : Service() {
         }
 
         if (milestone.isOverlay) {
+            vibrateStrong()
             overlayManager.show(
                 phrase = phrase,
                 appName = app.appName,
@@ -302,6 +308,21 @@ class MonitorService : Service() {
             .addCategory(Intent.CATEGORY_HOME)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         runCatching { startActivity(intent) }
+    }
+
+    /** Vibração forte e característica ao exibir a tela de bloqueio (marco de 1h). */
+    private fun vibrateStrong() {
+        runCatching {
+            val pattern = longArrayOf(0, 500, 150, 500, 150, 900)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                val vm = getSystemService(VibratorManager::class.java)
+                vm.defaultVibrator.vibrate(VibrationEffect.createWaveform(pattern, -1))
+            } else {
+                @Suppress("DEPRECATION")
+                val vibrator = getSystemService(Vibrator::class.java)
+                vibrator?.vibrate(VibrationEffect.createWaveform(pattern, -1))
+            }
+        }
     }
 
     private fun fireAlertNotification(app: TrackedApp, phrase: String, minutes: Int) {

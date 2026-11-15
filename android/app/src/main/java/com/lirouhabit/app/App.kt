@@ -4,6 +4,8 @@ import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.media.AudioAttributes
+import android.net.Uri
 import android.os.Build
 import com.lirouhabit.app.data.AppDatabase
 import com.lirouhabit.app.data.SettingsRepository
@@ -41,7 +43,16 @@ class App : Application() {
                 ).apply {
                     description = "Intervenções quando você passa do limite nos apps vilões"
                     enableVibration(true)
-                    vibrationPattern = longArrayOf(0, 400, 200, 400)
+                    vibrationPattern = longArrayOf(0, 500, 150, 500, 150, 800)
+                    // Som característico do app (tom de alerta próprio, stream de alarme)
+                    setSound(
+                        Uri.parse("android.resource://$packageName/${R.raw.alert_tone}"),
+                        AudioAttributes.Builder()
+                            .setUsage(AudioAttributes.USAGE_ALARM)
+                            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                            .build()
+                    )
+                    lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
                 }
             )
         }
