@@ -13,7 +13,12 @@ Também contém, na raiz, um protótipo web legado de rotinas/hábitos (HTML/JS 
     WindowManager), `BlockingOverlay` (15s de fricção p/ continuar), `PhraseBank`
     (frases reflexivas em 3 níveis — nunca clichês), `BootReceiver`
   - `ui/` — telas Compose em `ui/screens/`, `ui/vm/AppViewModel.kt` (VM único), `ui/Nav.kt`
-- `docs/` — landing page estática (GitHub Pages)
+  - fluxo de 1º uso: `IntroScreen` (apresentação de impacto) → `IntroDreamScreen`
+    ("qual seu maior sonho?") → `IntroAppsScreen` (seleção múltipla de vilões) →
+    `OnboardingScreen` (permissões) → `HomeScreen`
+- `docs/` — landing page estática (GitHub Pages) + `docs/icons/` (pacote de 21 ícones SVG)
+- ícones: SVG em `docs/icons/ic_*.svg` + Vector Drawables em `android/.../res/drawable/ic_*.xml`
+  (nunca usar emojis na UI — sempre o pacote de ícones)
 - `android-sdk/`, `tooling/` — ferramentas de build locais, NÃO versionadas
 
 ## Build

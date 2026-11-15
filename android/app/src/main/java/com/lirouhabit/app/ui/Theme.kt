@@ -5,10 +5,15 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
+val BrandRed = Color(0xFFE53935)
+val BrandAmber = Color(0xFFFFB300)
+val VictoryGreen = Color(0xFF43A047)
+val DefeatRed = Color(0xFFE57373)
+
 private val LirouColors = darkColorScheme(
-    primary = Color(0xFFE53935),
+    primary = BrandRed,
     onPrimary = Color.White,
-    secondary = Color(0xFFFFB300),
+    secondary = BrandAmber,
     onSecondary = Color.Black,
     background = Color(0xFF121212),
     onBackground = Color(0xFFF5F5F5),

@@ -39,7 +39,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.lirouhabit.app.R
 import com.lirouhabit.app.data.Vice
+import com.lirouhabit.app.ui.IconLabel
 import com.lirouhabit.app.ui.vm.AppViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -52,7 +54,7 @@ fun VicesScreen(vm: AppViewModel, onBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("🚬 Vícios & Maus Hábitos") },
+                title = { IconLabel(iconRes = R.drawable.ic_chain, text = "Vícios & Maus Hábitos") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Voltar")

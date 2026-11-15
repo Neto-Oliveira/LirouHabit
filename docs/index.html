@@ -5,11 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LirouHabit — Pare de trocar seus sonhos por scroll</title>
 <meta name="description" content="O app que te confronta NA HORA em que você troca seu futuro por 5 minutos de Instagram. Baixe o APK grátis.">
+<link rel="icon" type="image/svg+xml" href="icons/ic_flame.svg">
 <style>
   :root {
     --red: #e53935;
     --red-dark: #b71c1c;
     --amber: #ffb300;
+    --green: #43a047;
     --bg: #0d0d0d;
     --surface: #1a1a1a;
     --surface2: #242424;
@@ -24,6 +26,8 @@
     line-height: 1.6;
   }
   .container { max-width: 960px; margin: 0 auto; padding: 0 20px; }
+  .ic { width: 1.05em; height: 1.05em; vertical-align: -0.18em; fill: currentColor; }
+  .ic-lg { width: 22px; height: 22px; vertical-align: -4px; fill: currentColor; }
 
   /* HERO */
   .hero {
@@ -37,6 +41,7 @@
     padding: 60px 20px;
   }
   .badge {
+    display: inline-flex; align-items: center; gap: 7px;
     background: rgba(229,57,53,.15);
     border: 1px solid var(--red);
     color: var(--red);
@@ -61,7 +66,7 @@
     margin-bottom: 36px;
   }
   .cta {
-    display: inline-block;
+    display: inline-flex; align-items: center; gap: 10px;
     background: var(--red);
     color: #fff;
     font-size: 20px;
@@ -74,6 +79,7 @@
   }
   .cta:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 12px 40px rgba(229,57,53,.6); }
   .cta small { display: block; font-size: 12px; font-weight: 400; opacity: .85; margin-top: 2px; }
+  .cta .cta-col { text-align: left; }
   .hero .note { margin-top: 16px; font-size: 13px; color: var(--muted); }
 
   /* SEÇÕES */
@@ -99,6 +105,7 @@
     margin-bottom: 14px;
   }
   .step h3 { font-size: 18px; margin-bottom: 8px; }
+  .step h3 .ic-lg { fill: var(--amber); }
   .step p { color: var(--muted); font-size: 14px; }
 
   /* MOCKUP DO BLOQUEIO */
@@ -117,9 +124,7 @@
     padding: 28px 20px;
     text-align: center;
   }
-  .block-screen .warn { font-size: 42px; }
   .block-screen .big-minutes { color: var(--red); font-size: 72px; font-weight: 900; line-height: 1; margin-top: 12px; }
-  .block-screen h3 { color: var(--red); font-size: 21px; font-weight: 800; margin: 8px 0 4px; }
   .block-screen .where { color: var(--muted); font-size: 13px; margin-bottom: 18px; }
   .block-screen .phrase { font-style: italic; font-size: 15px; color: #eee; margin-bottom: 18px; }
   .block-screen .dream {
@@ -132,7 +137,8 @@
   .block-screen .dream .text { font-weight: 700; font-size: 15px; }
   .block-screen .question { font-weight: 700; font-size: 15px; margin-bottom: 14px; }
   .block-screen .btn-focus {
-    display: block; background: #43a047; color: #fff; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    background: var(--green); color: #fff; font-weight: 700;
     padding: 13px; border-radius: 10px; font-size: 14px; margin-bottom: 10px;
   }
   .block-screen .btn-stay {
@@ -144,6 +150,7 @@
   .perms { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
   .perm { background: var(--surface); border-radius: 14px; padding: 20px; border-left: 4px solid var(--red); }
   .perm h4 { font-size: 15px; margin-bottom: 6px; }
+  .perm h4 .ic-lg { fill: var(--red); }
   .perm p { color: var(--muted); font-size: 13px; }
 
   /* INSTALAÇÃO */
@@ -173,25 +180,26 @@
   details p { color: var(--muted); font-size: 14px; margin-top: 10px; }
 
   footer { padding: 40px 0; text-align: center; color: #666; font-size: 13px; border-top: 1px solid #222; }
+  footer .ic { fill: var(--red); }
 </style>
 </head>
 <body>
 
 <!-- HERO -->
 <header class="hero">
-  <span class="badge">⚡ Anti-procrastinação agressiva</span>
+  <span class="badge"><svg class="ic" viewBox="0 0 24 24"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg> Anti-procrastinação agressiva</span>
   <h1>Seu sonho está <span class="red">morrendo</span><br>a cada scroll.</h1>
   <p class="sub">
     Quantas vezes hoje você trocou o <b>seu futuro</b> por 5 minutos de Instagram?
-    O <b>LirouHabit</b> te confronta <b>na hora</b> — com uma tela de bloqueio que esfrega
-    o seu sonho na sua cara e pergunta: <i>"Deseja realmente continuar?"</i>
+    O <b>LirouHabit</b> te confronta <b>na hora</b> — e, se você insistir, toma a tela
+    com o seu sonho em destaque e pergunta: <i>"Valeu a pena?"</i>
   </p>
   <a class="cta" href="https://github.com/Neto-Oliveira/LirouHabit/releases/latest/download/lirouhabit.apk">
-    ⬇ BAIXAR APK — GRÁTIS
-    <small>Android 8+ · ~10 MB · 100% offline · sem cadastro</small>
+    <svg class="ic-lg" viewBox="0 0 24 24" style="fill:#fff;width:26px;height:26px;"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+    <span class="cta-col">BAIXAR APK — GRÁTIS<small>Android 8+ · ~7 MB · 100% offline · sem cadastro</small></span>
   </a>
-  <p class="note">🔒 Sem conta, sem nuvem, sem anúncios. Seus dados ficam só no seu celular.</p>
-  <p class="note">🛒 <b>Play Store: EM BREVE</b> — publicação sujeita à aprovação do Google. Por enquanto, o download oficial é o APK direto acima.</p>
+  <p class="note"><svg class="ic" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg> Sem conta, sem nuvem, sem anúncios. Seus dados ficam só no seu celular.</p>
+  <p class="note"><svg class="ic" viewBox="0 0 24 24"><path d="M20 4H4v2h16V4zm1 10v-2l-1-5H4l-1 5v2h1v6h10v-6h4v6h2v-6h1zm-9 3H6v-4h6v4z"/></svg> <b>Play Store: EM BREVE</b> — publicação sujeita à aprovação do Google. Por enquanto, o download oficial é o APK direto acima.</p>
 </header>
 
 <!-- COMO FUNCIONA -->
@@ -202,17 +210,17 @@
     <div class="steps">
       <div class="step">
         <span class="num">1</span>
-        <h3>🏆 Cadastre seus sonhos</h3>
+        <h3><svg class="ic-lg" viewBox="0 0 24 24"><path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94.63 1.5 1.98 2.63 3.61 2.96V19H7v2h10v-2h-4v-3.1c1.63-.33 2.98-1.46 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z"/></svg> Cadastre seus sonhos</h3>
         <p>Escreva seus sonhos, seus vícios e seus maus hábitos. É isso que o app usa como munição contra você.</p>
       </div>
       <div class="step">
         <span class="num">2</span>
-        <h3>😈 Marque os apps vilões</h3>
+        <h3><svg class="ic-lg" viewBox="0 0 24 24"><path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"/></svg> Marque os apps vilões</h3>
         <p>Instagram, TikTok, YouTube… escolha quem rouba seu tempo e defina o limite (padrão: 5 minutos).</p>
       </div>
       <div class="step">
         <span class="num">3</span>
-        <h3>🚨 Seja confrontado</h3>
+        <h3><svg class="ic-lg" viewBox="0 0 24 24"><path d="M18 16v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-5 0h-2v-2h2v2zm0-4h-2V8h2v4z"/></svg> Seja confrontado</h3>
         <p>No limite (5 min) e aos 15 min: notificações que tocam na ferida. Em 1 hora: a tela de bloqueio toma o app com o SEU sonho em destaque.</p>
       </div>
     </div>
@@ -233,11 +241,11 @@
           <p class="where">minutos no Instagram</p>
           <p class="phrase">"1 hora aqui. Não foi tempo que passou — foi a parte de hoje que o seu sonho não recebeu."</p>
           <div class="dream">
-            <div class="label">🏆 SEU SONHO</div>
+            <div class="label"><svg class="ic" viewBox="0 0 24 24"><path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94.63 1.5 1.98 2.63 3.61 2.96V19H7v2h10v-2h-4v-3.1c1.63-.33 2.98-1.46 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z"/></svg> SEU SONHO</div>
             <div class="text">Terminar a faculdade</div>
           </div>
           <p class="question">Valeu a pena?</p>
-          <span class="btn-focus">✅ VOLTAR AO QUE IMPORTA</span>
+          <span class="btn-focus"><svg class="ic" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg> VOLTAR AO QUE IMPORTA</span>
           <span class="btn-stay">Aguarde 15s…</span>
         </div>
       </div>
@@ -252,19 +260,19 @@
     <p class="section-sub">Transparência total: cada permissão tem um motivo — e nada sai do seu celular.</p>
     <div class="perms">
       <div class="perm">
-        <h4>📊 Acesso ao uso</h4>
+        <h4><svg class="ic-lg" viewBox="0 0 24 24"><path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zM16.2 13H19v6h-2.8z"/></svg> Acesso ao uso</h4>
         <p>É como o app detecta que o Instagram está aberto e cronometra seus minutos. Sem isso, não há monitoramento.</p>
       </div>
       <div class="perm">
-        <h4>🪟 Sobrepor outros apps</h4>
-        <p>Permite exibir a tela de bloqueio POR CIMA do app vilão. É o coração da intervenção.</p>
+        <h4><svg class="ic-lg" viewBox="0 0 24 24"><path d="M11.99 18.54l-7.37-5.73L3 14.07l9 7 9-7-1.63-1.27-7.38 5.74zM12 16l7.36-5.73L21 9l-9-7-9 7 1.63 1.27L12 16z"/></svg> Sobrepor outros apps</h4>
+        <p>Permite exibir a tela de bloqueio POR CIMA do app vilão. É o coração da intervenção de 1 hora.</p>
       </div>
       <div class="perm">
-        <h4>🔔 Notificações</h4>
-        <p>Dispara o alerta agressivo no exato momento em que o limite estoura.</p>
+        <h4><svg class="ic-lg" viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg> Notificações</h4>
+        <p>Dispara os alertas reflexivos quando você passa do limite (5 min e 15 min).</p>
       </div>
       <div class="perm">
-        <h4>🔋 Bateria sem restrição</h4>
+        <h4><svg class="ic-lg" viewBox="0 0 24 24"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg> Bateria sem restrição</h4>
         <p>Impede que o Android (principalmente Xiaomi e Samsung) mate o monitor em segundo plano.</p>
       </div>
     </div>
@@ -281,10 +289,10 @@
         <li><b>Baixe o APK</b> pelo botão de download (ou aponte a câmera para o QR Code abaixo).</li>
         <li>Ao abrir o arquivo, o Android avisa: <b>"instalação de fontes desconhecidas bloqueada"</b>. Toque em <b>Configurações</b>.</li>
         <li>Ative <b>"Permitir desta fonte"</b> para o navegador que você usou.</li>
-        <li>Volte, toque em <b>Instalar</b> e pronto. 🔥</li>
+        <li>Volte, toque em <b>Instalar</b> e pronto. <svg class="ic" viewBox="0 0 24 24" style="fill:var(--red);"><path d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z"/></svg></li>
       </ol>
       <div class="warn-box">
-        ⚠️ <b>Xiaomi / MIUI:</b> depois de instalar, vá em Configurações → Apps → LirouHabit →
+        <svg class="ic" viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg> <b>Xiaomi / MIUI:</b> depois de instalar, vá em Configurações → Apps → LirouHabit →
         <b>Outras permissões</b> e ative "Exibir sobre outros apps em segundo plano". Sem isso o bloqueio não aparece.
       </div>
     </div>
@@ -297,13 +305,13 @@
     <h2>A decisão é agora.<br>Daqui a 5 minutos você pode estar no scroll de novo.</h2>
     <p class="section-sub">Ou pode estar 5 minutos mais perto do seu sonho.</p>
     <a class="cta" href="https://github.com/Neto-Oliveira/LirouHabit/releases/latest/download/lirouhabit.apk">
-      ⬇ BAIXAR AGORA
-      <small>v1.0.0 · gratuito para sempre</small>
+      <svg class="ic-lg" viewBox="0 0 24 24" style="fill:#fff;width:26px;height:26px;"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+      <span class="cta-col">BAIXAR AGORA<small>v1.1.0 · gratuito para sempre</small></span>
     </a>
     <div class="qr">
       <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https%3A%2F%2Fgithub.com%2FNeto-Oliveira%2FLirouHabit%2Freleases%2Flatest%2Fdownload%2Flirouhabit.apk" alt="QR Code para baixar o APK do LirouHabit">
     </div>
-    <p class="qr-caption">📱 Aponte a câmera do celular para baixar direto nele</p>
+    <p class="qr-caption"><svg class="ic" viewBox="0 0 24 24"><path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"/></svg> Aponte a câmera do celular para baixar direto nele</p>
   </div>
 </section>
 
@@ -330,14 +338,14 @@
     </details>
     <details>
       <summary>E se eu clicar em "continuar mesmo assim"?</summary>
-      <p>A escolha é sempre sua — mas você vai precisar esperar 15 segundos encarando seu sonho. E 5 minutos depois, a tela de bloqueio volta. Sempre. 😈</p>
+      <p>A escolha é sempre sua — mas você vai precisar esperar 15 segundos encarando seu sonho. E 5 minutos depois, a tela de bloqueio volta. Sempre.</p>
     </details>
   </div>
 </section>
 
 <footer>
   <div class="container">
-    <p><b>LirouHabit</b> — feito para quem cansou de se sabotar. · Código aberto no GitHub</p>
+    <p><svg class="ic" viewBox="0 0 24 24"><path d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z"/></svg> <b>LirouHabit</b> — feito para quem cansou de se sabotar. · Código aberto no GitHub</p>
   </div>
 </footer>
 

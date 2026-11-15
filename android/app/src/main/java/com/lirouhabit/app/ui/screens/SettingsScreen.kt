@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -33,11 +35,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.lirouhabit.app.R
+import com.lirouhabit.app.ui.BrandRed
+import com.lirouhabit.app.ui.IconLabel
 import com.lirouhabit.app.ui.Routes
+import com.lirouhabit.app.ui.VictoryGreen
 import com.lirouhabit.app.ui.vm.AppViewModel
 import kotlin.math.roundToInt
 
@@ -53,7 +60,7 @@ fun SettingsScreen(vm: AppViewModel, nav: NavController, onBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("⚙️ Configurações") },
+                title = { IconLabel(iconRes = R.drawable.ic_gear, text = "Configurações") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Voltar")
@@ -98,9 +105,18 @@ fun SettingsScreen(vm: AppViewModel, nav: NavController, onBack: () -> Unit) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("Agressividade crescente 🔥", fontWeight = FontWeight.Bold)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_flame),
+                                contentDescription = null,
+                                tint = BrandRed,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text("Agressividade crescente", fontWeight = FontWeight.Bold)
+                        }
                         Text(
-                            "Cada reincidência no mesmo dia deixa a mensagem mais pesada",
+                            "Quanto mais tempo no app vilão, mais pesada a mensagem",
                             fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -115,13 +131,12 @@ fun SettingsScreen(vm: AppViewModel, nav: NavController, onBack: () -> Unit) {
             Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text("Permissões", fontWeight = FontWeight.Bold)
-                    Text(
-                        "Uso: ${if (vm.permUsage) "✅" else "❌"}  ·  Overlay: ${if (vm.permOverlay) "✅" else "❌"}  ·  " +
-                            "Notificações: ${if (vm.permNotif) "✅" else "❌"}  ·  Bateria: ${if (vm.permBattery) "✅" else "❌"}",
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(6.dp))
+                    PermissionStatus("Acesso ao uso", vm.permUsage)
+                    PermissionStatus("Sobrepor outros apps", vm.permOverlay)
+                    PermissionStatus("Notificações", vm.permNotif)
+                    PermissionStatus("Bateria sem restrição", vm.permBattery)
+                    Spacer(Modifier.height(10.dp))
                     OutlinedButton(
                         onClick = { nav.navigate(Routes.ONBOARDING) },
                         modifier = Modifier.fillMaxWidth()
@@ -150,7 +165,7 @@ fun SettingsScreen(vm: AppViewModel, nav: NavController, onBack: () -> Unit) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text("Sobre", fontWeight = FontWeight.Bold)
                     Text(
-                        "LirouHabit v1.0.0 · com.lirouhabit.app\n" +
+                        "LirouHabit v1.1.0 · com.lirouhabit.app\n" +
                             "100% offline: seus sonhos e vícios ficam só no seu celular.",
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -158,5 +173,24 @@ fun SettingsScreen(vm: AppViewModel, nav: NavController, onBack: () -> Unit) {
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun PermissionStatus(label: String, granted: Boolean) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(vertical = 3.dp)
+    ) {
+        Icon(
+            painter = painterResource(
+                if (granted) R.drawable.ic_check_circle else R.drawable.ic_x_circle
+            ),
+            contentDescription = if (granted) "Concedida" else "Pendente",
+            tint = if (granted) VictoryGreen else BrandRed,
+            modifier = Modifier.size(16.dp)
+        )
+        Spacer(Modifier.width(8.dp))
+        Text(label, fontSize = 13.sp)
     }
 }

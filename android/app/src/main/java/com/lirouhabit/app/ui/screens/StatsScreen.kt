@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -25,10 +27,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.lirouhabit.app.R
+import com.lirouhabit.app.ui.BrandAmber
+import com.lirouhabit.app.ui.BrandRed
+import com.lirouhabit.app.ui.IconLabel
 import com.lirouhabit.app.ui.StatCard
+import com.lirouhabit.app.ui.VictoryGreen
 import com.lirouhabit.app.ui.vm.AppViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -46,7 +55,7 @@ fun StatsScreen(vm: AppViewModel, onBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("📊 Estatísticas") },
+                title = { IconLabel(iconRes = R.drawable.ic_chart, text = "Estatísticas") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Voltar")
@@ -61,34 +70,39 @@ fun StatsScreen(vm: AppViewModel, onBack: () -> Unit) {
         ) {
             item {
                 Row(modifier = Modifier.fillMaxWidth()) {
-                    StatCard("🚨", triggers, "Intervenções", Modifier.weight(1f))
-                    StatCard("✅", victories, "Vitórias", Modifier.weight(1f))
-                    StatCard("😔", defeats, "Derrotas", Modifier.weight(1f))
+                    StatCard(R.drawable.ic_siren, triggers, "Intervenções", Modifier.weight(1f), iconTint = BrandAmber)
+                    StatCard(R.drawable.ic_check_circle, victories, "Vitórias", Modifier.weight(1f), iconTint = VictoryGreen)
+                    StatCard(R.drawable.ic_x_circle, defeats, "Derrotas", Modifier.weight(1f), iconTint = BrandRed)
                 }
                 Spacer(Modifier.height(16.dp))
-                Text(
-                    "Últimos confrontos",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                Text("Últimos confrontos", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(8.dp))
             }
 
             if (events.isEmpty()) {
                 item {
-                    Text(
-                        "Nenhum confronto ainda. Ou você está focado… ou o monitor está desligado. 👀",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 14.sp
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_eye),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            "Nenhum confronto ainda. Ou você está focado… ou o monitor está desligado.",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 14.sp
+                        )
+                    }
                 }
             }
 
             items(events, key = { it.id }) { ev ->
-                val (emoji, label) = when (ev.outcome) {
-                    "VICTORY" -> "✅" to "Vitória — voltou ao foco"
-                    "DEFEAT" -> "😔" to "Derrota — continuou no app"
-                    else -> "🚨" to "Intervenção disparada"
+                val (iconRes, tint, label) = when (ev.outcome) {
+                    "VICTORY" -> Triple(R.drawable.ic_check_circle, VictoryGreen, "Vitória — voltou ao foco")
+                    "DEFEAT" -> Triple(R.drawable.ic_x_circle, BrandRed, "Derrota — continuou no app")
+                    else -> Triple(R.drawable.ic_siren, BrandAmber, "Intervenção disparada")
                 }
                 Card(
                     modifier = Modifier
@@ -99,8 +113,13 @@ fun StatsScreen(vm: AppViewModel, onBack: () -> Unit) {
                         modifier = Modifier.padding(12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(emoji, fontSize = 22.sp)
-                        Spacer(Modifier.padding(6.dp))
+                        Icon(
+                            painter = painterResource(iconRes),
+                            contentDescription = null,
+                            tint = tint,
+                            modifier = Modifier.size(22.dp)
+                        )
+                        Spacer(Modifier.width(10.dp))
                         Column {
                             Text(
                                 "${ev.appName} — $label",

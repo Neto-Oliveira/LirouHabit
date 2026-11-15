@@ -106,7 +106,7 @@ class MonitorService : Service() {
     private fun startAsForeground() {
         val notification = NotificationCompat.Builder(this, CHANNEL_STATUS)
             .setSmallIcon(android.R.drawable.ic_dialog_alert)
-            .setContentTitle("LirouHabit vigiando 👀")
+            .setContentTitle("LirouHabit vigiando")
             .setContentText("Monitor anti-procrastinação ativo")
             .setContentIntent(
                 PendingIntent.getActivity(
