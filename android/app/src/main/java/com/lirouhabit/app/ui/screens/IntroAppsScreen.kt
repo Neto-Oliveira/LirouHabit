@@ -20,6 +20,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,6 +47,7 @@ import com.lirouhabit.app.ui.vm.InstalledApp
 fun IntroAppsScreen(vm: AppViewModel, onNext: () -> Unit) {
     var apps by remember { mutableStateOf<List<InstalledApp>?>(null) }
     var selected by remember { mutableStateOf(setOf<String>()) }
+    var query by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) { apps = vm.loadInstalledApps() }
 
@@ -75,7 +77,16 @@ fun IntroAppsScreen(vm: AppViewModel, onNext: () -> Unit) {
                 fontSize = 13.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(12.dp))
+
+            OutlinedTextField(
+                value = query,
+                onValueChange = { query = it },
+                label = { Text("Buscar app (ex.: Instagram)") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(Modifier.height(12.dp))
 
             val list = apps
             if (list == null) {
@@ -86,8 +97,11 @@ fun IntroAppsScreen(vm: AppViewModel, onNext: () -> Unit) {
                     contentAlignment = Alignment.Center
                 ) { CircularProgressIndicator() }
             } else {
+                val filtered = list.filter {
+                    it.name.contains(query, ignoreCase = true)
+                }
                 LazyColumn(modifier = Modifier.weight(1f)) {
-                    items(list, key = { it.packageName }) { app ->
+                    items(filtered, key = { it.packageName }) { app ->
                         val isSelected = app.packageName in selected
                         Card(
                             modifier = Modifier
