@@ -196,7 +196,7 @@
   </p>
   <a class="cta" href="https://github.com/Neto-Oliveira/LirouHabit/releases/latest/download/lirouhabit.apk">
     <svg class="ic-lg" viewBox="0 0 24 24" style="fill:#fff;width:26px;height:26px;"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-    <span class="cta-col">BAIXAR APK — GRÁTIS<small>Android 8+ · ~7 MB · 100% offline · sem cadastro</small></span>
+    <span class="cta-col">BAIXAR APK — GRÁTIS<small><span class="app-version">v1.2.0</span> · Android 8+ · <span class="app-size">7,3 MB</span> · 100% offline</small></span>
   </a>
   <p class="note"><svg class="ic" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg> Sem conta, sem nuvem, sem anúncios. Seus dados ficam só no seu celular.</p>
   <p class="note"><svg class="ic" viewBox="0 0 24 24"><path d="M20 4H4v2h16V4zm1 10v-2l-1-5H4l-1 5v2h1v6h10v-6h4v6h2v-6h1zm-9 3H6v-4h6v4z"/></svg> <b>Play Store: EM BREVE</b> — publicação sujeita à aprovação do Google. Por enquanto, o download oficial é o APK direto acima.</p>
@@ -306,8 +306,9 @@
     <p class="section-sub">Ou pode estar 5 minutos mais perto do seu sonho.</p>
     <a class="cta" href="https://github.com/Neto-Oliveira/LirouHabit/releases/latest/download/lirouhabit.apk">
       <svg class="ic-lg" viewBox="0 0 24 24" style="fill:#fff;width:26px;height:26px;"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-      <span class="cta-col">BAIXAR AGORA<small>v1.1.0 · gratuito para sempre</small></span>
+      <span class="cta-col">BAIXAR AGORA<small><span class="app-version">v1.2.0</span> · gratuito para sempre</small></span>
     </a>
+    <p class="note" style="margin-top:14px;">Versão atual: <b class="app-version">v1.2.0</b> · <span class="release-date">publicada recentemente</span></p>
     <div class="qr">
       <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https%3A%2F%2Fgithub.com%2FNeto-Oliveira%2FLirouHabit%2Freleases%2Flatest%2Fdownload%2Flirouhabit.apk" alt="QR Code para baixar o APK do LirouHabit">
     </div>
@@ -348,6 +349,35 @@
     <p><svg class="ic" viewBox="0 0 24 24"><path d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z"/></svg> <b>LirouHabit</b> — feito para quem cansou de se sabotar. · Código aberto no GitHub</p>
   </div>
 </footer>
+
+<script>
+// Versão do download sempre atualizada: consulta a última release no GitHub.
+// Se a API falhar (rate limit/offline), mantém os valores fixos do HTML.
+fetch('https://api.github.com/repos/Neto-Oliveira/LirouHabit/releases/latest')
+  .then(function (r) { return r.json(); })
+  .then(function (rel) {
+    if (rel.tag_name) {
+      document.querySelectorAll('.app-version').forEach(function (el) {
+        el.textContent = rel.tag_name;
+      });
+    }
+    if (rel.published_at) {
+      var d = new Date(rel.published_at);
+      var data = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      document.querySelectorAll('.release-date').forEach(function (el) {
+        el.textContent = 'publicada em ' + data;
+      });
+    }
+    var apk = (rel.assets || []).find(function (a) { return a.name === 'lirouhabit.apk'; });
+    if (apk && apk.size) {
+      var mb = (apk.size / 1048576).toFixed(1).replace('.', ',');
+      document.querySelectorAll('.app-size').forEach(function (el) {
+        el.textContent = mb + ' MB';
+      });
+    }
+  })
+  .catch(function () { /* fallback: mantém versão fixa do HTML */ });
+</script>
 
 </body>
 </html>
