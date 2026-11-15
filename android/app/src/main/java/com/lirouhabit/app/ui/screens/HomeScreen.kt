@@ -103,6 +103,34 @@ fun HomeScreen(vm: AppViewModel, nav: NavController) {
                 Spacer(Modifier.height(12.dp))
             }
 
+            if (vm.corePermissionsGranted && !monitorOn) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { vm.setMonitor(true) },
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF4A0A0A))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_siren),
+                            contentDescription = null,
+                            tint = Color(0xFFEF9A9A),
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(Modifier.width(10.dp))
+                        Text(
+                            "Monitor DESLIGADO — sem ele, nada te confronta. Toque aqui para ligar.",
+                            color = Color(0xFFEF9A9A),
+                            fontSize = 13.sp
+                        )
+                    }
+                }
+                Spacer(Modifier.height(12.dp))
+            }
+
             Card(
                 colors = CardDefaults.cardColors(
                     containerColor = if (monitorOn) Color(0xFF1B3A1E)

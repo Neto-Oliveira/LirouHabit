@@ -7,6 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.lirouhabit.app.ui.screens.AppsScreen
+import com.lirouhabit.app.ui.screens.DevScreen
 import com.lirouhabit.app.ui.screens.DreamsScreen
 import com.lirouhabit.app.ui.screens.HomeScreen
 import com.lirouhabit.app.ui.screens.IntroAppsScreen
@@ -29,6 +30,7 @@ object Routes {
     const val APPS = "apps"
     const val STATS = "stats"
     const val SETTINGS = "settings"
+    const val DEV = "dev"
 }
 
 /**
@@ -39,6 +41,13 @@ object Routes {
 fun AppNav(vm: AppViewModel) {
     val nav = rememberNavController()
     val onboardingDone by vm.onboardingDone.collectAsState()
+
+    // Modo SECRETO: 3 chacoalhadas fortes abrem a tela de teste/desenvolvimento.
+    // Nenhum botão visível leva até ela.
+    ShakeToDevMode {
+        val current = nav.currentBackStackEntry?.destination?.route
+        if (current != Routes.DEV) nav.navigate(Routes.DEV)
+    }
 
     NavHost(
         navController = nav,
@@ -69,5 +78,6 @@ fun AppNav(vm: AppViewModel) {
         composable(Routes.APPS) { AppsScreen(vm = vm, onBack = { nav.popBackStack() }) }
         composable(Routes.STATS) { StatsScreen(vm = vm, onBack = { nav.popBackStack() }) }
         composable(Routes.SETTINGS) { SettingsScreen(vm = vm, nav = nav, onBack = { nav.popBackStack() }) }
+        composable(Routes.DEV) { DevScreen(vm = vm, onBack = { nav.popBackStack() }) }
     }
 }

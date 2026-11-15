@@ -18,6 +18,7 @@ class SettingsRepository(private val context: Context) {
         private val KEY_MONITOR_ON = booleanPreferencesKey("monitor_enabled")
         private val KEY_ONBOARDING_DONE = booleanPreferencesKey("onboarding_done")
         private val KEY_ESCALATION = booleanPreferencesKey("escalation_on")
+        private val KEY_MONITOR_TOGGLED_ONCE = booleanPreferencesKey("monitor_toggled_once")
         const val DEFAULT_LIMIT = 5
     }
 
@@ -33,7 +34,13 @@ class SettingsRepository(private val context: Context) {
     val escalationOn: Flow<Boolean> =
         context.dataStore.data.map { it[KEY_ESCALATION] ?: true }
 
+    /** Se o usuário já ligou/desligou o monitor manualmente alguma vez. */
+    val monitorToggledOnce: Flow<Boolean> =
+        context.dataStore.data.map { it[KEY_MONITOR_TOGGLED_ONCE] ?: false }
+
     suspend fun isMonitorEnabledNow(): Boolean = monitorEnabled.first()
+    suspend fun isOnboardingDoneNow(): Boolean = onboardingDone.first()
+    suspend fun wasMonitorToggledOnce(): Boolean = monitorToggledOnce.first()
 
     suspend fun setDefaultLimit(value: Int) {
         context.dataStore.edit { it[KEY_DEFAULT_LIMIT] = value }
@@ -41,6 +48,10 @@ class SettingsRepository(private val context: Context) {
 
     suspend fun setMonitorEnabled(value: Boolean) {
         context.dataStore.edit { it[KEY_MONITOR_ON] = value }
+    }
+
+    suspend fun setMonitorToggledOnce(value: Boolean) {
+        context.dataStore.edit { it[KEY_MONITOR_TOGGLED_ONCE] = value }
     }
 
     suspend fun setOnboardingDone(value: Boolean) {

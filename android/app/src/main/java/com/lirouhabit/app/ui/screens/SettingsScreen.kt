@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.lirouhabit.app.R
+import com.lirouhabit.app.monitor.MonitorService
 import com.lirouhabit.app.ui.BrandRed
 import com.lirouhabit.app.ui.IconLabel
 import com.lirouhabit.app.ui.Routes
@@ -59,6 +60,11 @@ fun SettingsScreen(vm: AppViewModel, nav: NavController, onBack: () -> Unit) {
     val defaultLimit by vm.defaultLimit.collectAsState()
     val escalation by vm.escalationOn.collectAsState()
     var detectedNow by remember { mutableStateOf("…") }
+    val versionName = remember {
+        runCatching {
+            context.packageManager.getPackageInfo(context.packageName, 0).versionName
+        }.getOrNull() ?: "?"
+    }
 
     LaunchedEffect(Unit) {
         vm.refreshPermissions()
@@ -149,6 +155,11 @@ fun SettingsScreen(vm: AppViewModel, nav: NavController, onBack: () -> Unit) {
                     PermissionStatus("Bateria sem restrição", vm.permBattery)
                     Spacer(Modifier.height(8.dp))
                     Text(
+                        "Serviço do monitor: ${if (MonitorService.isRunning) "ATIVO ✅" else "PARADO ❌"}",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
                         "Detectando agora: $detectedNow",
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -182,7 +193,7 @@ fun SettingsScreen(vm: AppViewModel, nav: NavController, onBack: () -> Unit) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text("Sobre", fontWeight = FontWeight.Bold)
                     Text(
-                        "LirouHabit v1.1.0 · com.lirouhabit.app\n" +
+                        "LirouHabit v$versionName · com.lirouhabit.app\n" +
                             "100% offline: seus sonhos e vícios ficam só no seu celular.",
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant

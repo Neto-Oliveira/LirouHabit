@@ -48,6 +48,11 @@ class MonitorService : Service() {
     )
 
     companion object {
+        /** Flag simples para a UI saber se o serviço está rodando. */
+        @Volatile
+        var isRunning = false
+            private set
+
         const val CHANNEL_STATUS = "monitor_status"
         // v2: ID novo força a recriação do canal em instalações antigas
         // (som/vibração de canal ficam travados após a criação no Android 8+)
@@ -91,10 +96,16 @@ class MonitorService : Service() {
     private val firedMilestones = mutableMapOf<String, MutableSet<Int>>()
     private val cooldownUntil = mutableMapOf<String, Long>()
 
+    // Diagnóstico (tela secreta de desenvolvimento)
+    private var lastLoggedForeground: String? = null
+    private var lastPausedReason: String? = null
+
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onCreate() {
         super.onCreate()
+        isRunning = true
+        MonitorLog.add("serviço iniciado")
         val app = application as App
         db = app.db
         settings = app.settings
@@ -108,6 +119,8 @@ class MonitorService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int = START_STICKY
 
     override fun onDestroy() {
+        isRunning = false
+        MonitorLog.add("serviço encerrado")
         overlayManager.hide()
         scope.cancel()
         super.onDestroy()
@@ -140,11 +153,21 @@ class MonitorService : Service() {
     }
 
     private fun observeData() {
-        scope.launch { settings.monitorEnabled.collect { monitorEnabled = it } }
+        scope.launch {
+            settings.monitorEnabled.collect {
+                monitorEnabled = it
+                MonitorLog.add("monitor ligado=$it")
+            }
+        }
         scope.launch { settings.escalationOn.collect { escalationOn = it } }
         scope.launch {
             db.trackedAppDao().all().collect { list ->
-                trackedApps = list.filter { it.enabled }.associateBy { it.packageName }
+                val enabled = list.filter { it.enabled }
+                trackedApps = enabled.associateBy { it.packageName }
+                MonitorLog.add(
+                    "apps vilões (${enabled.size}): " +
+                        enabled.joinToString { "${it.appName}=${it.limitMinutes}min" }
+                )
             }
         }
         scope.launch {
@@ -170,16 +193,23 @@ class MonitorService : Service() {
 
     private fun tick() {
         if (!monitorEnabled) {
+            pause("monitor desligado")
             resetSession()
             return
         }
         // Notificações NÃO dependem de overlay — só do acesso ao uso.
         if (!UsageMonitor.hasUsageAccess(this)) {
+            pause("sem acesso ao uso")
             resetSession()
             return
         }
+        resume()
 
         val foreground = usageMonitor.currentForegroundApp() ?: return
+        if (foreground != lastLoggedForeground) {
+            lastLoggedForeground = foreground
+            MonitorLog.add("foreground: $foreground")
+        }
         if (foreground == packageName) return // LirouHabit aberto: pausa, não reseta
 
         val now = System.currentTimeMillis()
@@ -213,7 +243,25 @@ class MonitorService : Service() {
         }
 
         fired.add(milestone.minutes)
+        MonitorLog.add(
+            "marco ${milestone.minutes}min em ${tracked.appName} -> " +
+                if (milestone.isOverlay) "tela de bloqueio" else "notificação"
+        )
         intervene(tracked, milestone)
+    }
+
+    private fun pause(reason: String) {
+        if (lastPausedReason != reason) {
+            lastPausedReason = reason
+            MonitorLog.add("pausado: $reason")
+        }
+    }
+
+    private fun resume() {
+        if (lastPausedReason != null) {
+            lastPausedReason = null
+            MonitorLog.add("monitor rodando (uso + apps ok)")
+        }
     }
 
     /**
@@ -337,6 +385,10 @@ class MonitorService : Service() {
             .build()
         runCatching {
             NotificationManagerCompat.from(this).notify(ALERT_NOTIF_ID, notification)
+        }.onSuccess {
+            MonitorLog.add("notificação enviada (${app.appName}, ${minutes}min)")
+        }.onFailure {
+            MonitorLog.add("FALHA na notificação: ${it.message}")
         }
     }
 }

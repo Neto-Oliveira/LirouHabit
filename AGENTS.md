@@ -39,6 +39,9 @@ cd android
 - minSdk 26 / target 34 · zero backend, zero internet
 - Frases de intervenção em `monitor/PhraseBank.kt` com placeholders {sonho} {vicio} {app} {tempo}
 - Eventos de intervenção: TRIGGERED / VICTORY / DEFEAT (tabela `intervention_events`)
+- Modo de teste SECRETO: 3 chacoalhadas fortes no celular abrem a `DevScreen`
+  (estado das permissões, testes de notificação/overlay e log ao vivo do monitor).
+  Nenhum botão visível leva até ela — é de propósito.
 
 ## Distribuição
 - APK via GitHub Releases (`releases/latest/download/lirouhabit.apk`)

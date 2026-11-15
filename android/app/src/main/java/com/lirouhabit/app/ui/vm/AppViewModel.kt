@@ -12,6 +12,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.AndroidViewModel
@@ -22,11 +24,15 @@ import com.lirouhabit.app.data.SettingsRepository
 import com.lirouhabit.app.data.TrackedApp
 import com.lirouhabit.app.data.Vice
 import com.lirouhabit.app.lirouApp
+import com.lirouhabit.app.monitor.MonitorLog
 import com.lirouhabit.app.monitor.MonitorService
+import com.lirouhabit.app.monitor.OverlayManager
+import com.lirouhabit.app.monitor.PhraseBank
 import com.lirouhabit.app.monitor.UsageMonitor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -42,6 +48,18 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     private val db = application.lirouApp.db
     private val settings = application.lirouApp.settings
     private val usageMonitor = UsageMonitor(application)
+
+    init {
+        // Migração: quem concluiu o onboarding ANTES do auto-ligar existir ficava
+        // com o monitor desligado para sempre. Liga uma única vez automaticamente.
+        viewModelScope.launch {
+            val done = settings.isOnboardingDoneNow()
+            val toggled = settings.wasMonitorToggledOnce()
+            if (done && !toggled) {
+                setMonitor(true)
+            }
+        }
+    }
 
     private fun <T> kotlinx.coroutines.flow.Flow<T>.asState(initial: T): StateFlow<T> =
         stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), initial)
@@ -124,6 +142,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     fun setEscalation(value: Boolean) = viewModelScope.launch { settings.setEscalationOn(value) }
 
     fun setMonitor(on: Boolean) = viewModelScope.launch {
+        settings.setMonitorToggledOnce(true)
         settings.setMonitorEnabled(on)
         val ctx = getApplication<Application>()
         if (on) MonitorService.start(ctx) else MonitorService.stop(ctx)
@@ -147,6 +166,41 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     fun detectForegroundNow(): String =
         runCatching { usageMonitor.currentForegroundApp() ?: "nada detectado" }
             .getOrDefault("erro ao ler (permissão?)")
+
+    /** Dispara o alerta REAL na hora (som + vibração) — teste de ponta a ponta da notificação. */
+    fun testAlert(level: Int = 1, minutes: Int = 5) {
+        val ctx = getApplication<Application>()
+        val phrase = PhraseBank.phrase(
+            level = level,
+            dream = dreams.value.firstOrNull()?.text ?: "",
+            vice = vices.value.firstOrNull()?.text ?: "",
+            app = "Instagram",
+            minutes = minutes
+        )
+        val notification = NotificationCompat.Builder(ctx, MonitorService.CHANNEL_ALERT)
+            .setSmallIcon(android.R.drawable.ic_dialog_alert)
+            .setContentTitle("Instagram • $minutes min (TESTE)")
+            .setContentText(phrase)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(phrase))
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setCategory(NotificationCompat.CATEGORY_ALARM)
+            .setAutoCancel(true)
+            .build()
+        runCatching { NotificationManagerCompat.from(ctx).notify(900, notification) }
+            .onSuccess { MonitorLog.add("TESTE: notificação enviada (${minutes}min)") }
+            .onFailure { MonitorLog.add("TESTE: FALHA na notificação: ${it.message}") }
+    }
+
+    /** Abre a tela de bloqueio REAL na hora — teste de ponta a ponta do overlay. */
+    fun testOverlay() {
+        MonitorLog.add("TESTE: abrindo tela de bloqueio")
+        OverlayManager(getApplication()).show(
+            phrase = "TESTE: 1 hora aqui. Não foi tempo que passou — foi a parte de hoje que o seu sonho não recebeu.",
+            appName = "Instagram (teste)",
+            dream = dreams.value.firstOrNull()?.text ?: "Terminar a faculdade",
+            elapsedMinutes = 60
+        ) { }
+    }
 
     fun refreshPermissions() {
         val ctx = getApplication<Application>()
