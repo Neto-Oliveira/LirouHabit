@@ -71,6 +71,7 @@ class MonitorService : Service() {
         private const val MILESTONE_OVERLAY_MIN = 60
         private const val SNOOZE_AFTER_DEFEAT_MS = 5 * 60_000L
         private const val GRACE_MS = 2 * 60_000L // troca de aba não reseta a sessão
+        const val ACTION_FORCE_MILESTONE = "com.lirouhabit.app.FORCE_MILESTONE"
 
         fun start(context: Context) {
             ContextCompat.startForegroundService(
@@ -81,6 +82,13 @@ class MonitorService : Service() {
 
         fun stop(context: Context) {
             context.stopService(Intent(context, MonitorService::class.java))
+        }
+
+        /** Força um marco agora (usado pela tela de teste para provar o caminho do serviço). */
+        fun forceMilestone(context: Context) {
+            context.startService(
+                Intent(context, MonitorService::class.java).setAction(ACTION_FORCE_MILESTONE)
+            )
         }
     }
 
@@ -100,6 +108,7 @@ class MonitorService : Service() {
     private var sessionPkg: String? = null
     private var accumulatedMs = 0L
     private var lastSeenAt = 0L
+    private var lastTickAt = 0L
     private val firedMilestones = mutableMapOf<String, MutableSet<Int>>()
     private val cooldownUntil = mutableMapOf<String, Long>()
 
@@ -107,6 +116,7 @@ class MonitorService : Service() {
     private var lastLoggedForeground: String? = null
     private var lastPausedReason: String? = null
     private var lastLoggedMinute = 0
+    private var lastStatusMinute = -1
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -124,7 +134,12 @@ class MonitorService : Service() {
         startLoop()
     }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int = START_STICKY
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (intent?.action == ACTION_FORCE_MILESTONE) {
+            scope.launch { forceMilestone() }
+        }
+        return START_STICKY
+    }
 
     override fun onDestroy() {
         isRunning = false
@@ -200,6 +215,10 @@ class MonitorService : Service() {
     }
 
     private fun tick() {
+        val now = System.currentTimeMillis()
+        val elapsed = if (lastTickAt == 0L) POLL_MS else (now - lastTickAt).coerceIn(0L, POLL_MS * 3)
+        lastTickAt = now
+
         if (!monitorEnabled) {
             pause("monitor desligado")
             resetSession()
@@ -220,7 +239,6 @@ class MonitorService : Service() {
         }
         if (foreground == packageName) return // LirouHabit aberto: pausa, não reseta
 
-        val now = System.currentTimeMillis()
         val tracked = trackedApps[foreground]
 
         if (tracked == null) {
@@ -238,7 +256,7 @@ class MonitorService : Service() {
             sessionPkg = foreground
             lastLoggedMinute = 0
         }
-        accumulatedMs += POLL_MS
+        accumulatedMs += elapsed
         lastSeenAt = now
         sessionApp = tracked.appName
         sessionMs = accumulatedMs
@@ -248,6 +266,7 @@ class MonitorService : Service() {
         if (wholeMinutes > lastLoggedMinute) {
             lastLoggedMinute = wholeMinutes
             MonitorLog.add("acumulado: ${wholeMinutes}min em ${tracked.appName}")
+            updateStatusNotification("${tracked.appName} • ${"%.1f".format(accumulatedMs / 60_000.0)} / ${tracked.limitMinutes} min")
         }
 
         val fired = firedMilestones.getOrPut(foreground) { mutableSetOf() }
@@ -368,8 +387,11 @@ class MonitorService : Service() {
         accumulatedMs = 0L
         lastSeenAt = 0L
         lastLoggedMinute = 0
+        lastStatusMinute = -1
+        lastTickAt = 0L
         sessionApp = null
         sessionMs = 0L
+        updateStatusNotification()
     }
 
     private fun goHome() {
@@ -377,6 +399,37 @@ class MonitorService : Service() {
             .addCategory(Intent.CATEGORY_HOME)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         runCatching { startActivity(intent) }
+    }
+
+    /** Atualiza a notificação persistente com o progresso da sessão atual. */
+    private fun updateStatusNotification(text: String = "Monitor anti-procrastinação ativo") {
+        runCatching {
+            val notification = NotificationCompat.Builder(this, CHANNEL_STATUS)
+                .setSmallIcon(android.R.drawable.ic_dialog_alert)
+                .setContentTitle("LirouHabit vigiando")
+                .setContentText(text)
+                .setContentIntent(
+                    PendingIntent.getActivity(
+                        this, 0,
+                        Intent(this, MainActivity::class.java),
+                        PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                    )
+                )
+                .setOngoing(true)
+                .build()
+            NotificationManagerCompat.from(this).notify(STATUS_NOTIF_ID, notification)
+        }
+    }
+
+    /** Força um marco agora (caminho do serviço) — usado pela tela de teste. */
+    private fun forceMilestone() {
+        val app = trackedApps.values.firstOrNull()
+        if (app == null) {
+            MonitorLog.add("TESTE (serviço): nenhum app vilão cadastrado")
+            return
+        }
+        MonitorLog.add("TESTE (serviço): forçando marco em ${app.appName}")
+        intervene(app, Milestone(app.limitMinutes, false, 1))
     }
 
     /** Vibração forte e característica ao exibir a tela de bloqueio (marco de 1h). */

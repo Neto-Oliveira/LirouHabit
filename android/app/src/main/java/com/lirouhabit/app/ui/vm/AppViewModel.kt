@@ -58,6 +58,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             if (done && !toggled) {
                 setMonitor(true)
             }
+            ensureMonitorRunning()
         }
     }
 
@@ -191,6 +192,18 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             .onFailure { MonitorLog.add("TESTE: FALHA na notificação: ${it.message}") }
     }
 
+    /** Reabre o serviço do monitor se ele foi morto pelo sistema (ex.: Samsung). */
+    fun ensureMonitorRunning() = viewModelScope.launch {
+        if (settings.isMonitorEnabledNow() && !MonitorService.isRunning) {
+            MonitorService.start(getApplication())
+            MonitorLog.add("serviço reiniciado (estava morto)")
+        }
+    }
+
+    /** Dispara um marco pelo CAMINHO DO SERVIÇO (não pelo VM) — prova ponta a ponta. */
+    fun forceMilestone() {
+        MonitorService.forceMilestone(getApplication())
+    }
     /** Abre a tela de bloqueio REAL na hora — teste de ponta a ponta do overlay. */
     fun testOverlay() {
         MonitorLog.add("TESTE: abrindo tela de bloqueio")

@@ -181,6 +181,11 @@ fun DevScreen(vm: AppViewModel, onBack: () -> Unit) {
                         onClick = { vm.testOverlay() },
                         modifier = Modifier.fillMaxWidth()
                     ) { Text("Tela de bloqueio (overlay 1h)") }
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedButton(
+                        onClick = { vm.forceMilestone() },
+                        modifier = Modifier.fillMaxWidth()
+                    ) { Text("Forçar marco (via serviço) — testa ponta a ponta") }
                 }
             }
 
