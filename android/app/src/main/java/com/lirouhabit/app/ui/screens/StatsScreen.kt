@@ -1,5 +1,8 @@
 package com.lirouhabit.app.ui.screens
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -9,8 +12,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Card
@@ -40,6 +45,10 @@ import com.lirouhabit.app.ui.StatCard
 import com.lirouhabit.app.ui.VictoryGreen
 import com.lirouhabit.app.ui.vm.AppViewModel
 import java.text.SimpleDateFormat
+import java.time.DayOfWeek
+import java.time.LocalDate
+import java.time.format.TextStyle
+import java.time.temporal.TemporalAdjusters
 import java.util.Date
 import java.util.Locale
 
@@ -50,7 +59,26 @@ fun StatsScreen(vm: AppViewModel, onBack: () -> Unit) {
     val triggers by vm.triggers.collectAsState()
     val victories by vm.victories.collectAsState()
     val defeats by vm.defeats.collectAsState()
+    val usage by vm.dailyUsage.collectAsState()
     val fmt = remember { SimpleDateFormat("dd/MM HH:mm", Locale.getDefault()) }
+
+    // ---- Tempo de uso: últimos 7 dias + semanas (semana = seg→dom, zera na segunda) ----
+    val today = LocalDate.now()
+    val weekStart = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+    val lastWeekStart = weekStart.minusWeeks(1)
+
+    fun msOn(date: LocalDate): Long {
+        val iso = date.toString() // yyyy-MM-dd
+        return usage.filter { it.date == iso }.sumOf { it.totalMs }
+    }
+
+    val last7 = (6 downTo 0).map { offset ->
+        val date = today.minusDays(offset.toLong())
+        date to msOn(date) / 60_000.0
+    }
+    val thisWeekMs = (0..6).sumOf { msOn(weekStart.plusDays(it.toLong())) }
+    val lastWeekMs = (0..6).sumOf { msOn(lastWeekStart.plusDays(it.toLong())) }
+    val diffMs = thisWeekMs - lastWeekMs
 
     Scaffold(
         topBar = {
@@ -74,7 +102,54 @@ fun StatsScreen(vm: AppViewModel, onBack: () -> Unit) {
                     StatCard(R.drawable.ic_check_circle, victories, "Vitórias", Modifier.weight(1f), iconTint = VictoryGreen)
                     StatCard(R.drawable.ic_x_circle, defeats, "Derrotas", Modifier.weight(1f), iconTint = BrandRed)
                 }
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(20.dp))
+
+                // ---- Tempo de uso nos apps vilões ----
+                Text("Tempo nos apps vilões", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(8.dp))
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(modifier = Modifier.padding(14.dp)) {
+                        UsageBarChart(last7)
+                        Spacer(Modifier.height(10.dp))
+                        Text(
+                            "em minutos por dia (inclui hoje, ainda contando)",
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                Spacer(Modifier.height(12.dp))
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(modifier = Modifier.padding(14.dp)) {
+                        Text("Visão semanal (zera na segunda)", fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.height(8.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Esta semana", modifier = Modifier.weight(1f), fontSize = 13.sp)
+                            Text(
+                                "%.0f min".format(thisWeekMs / 60_000.0),
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Semana passada", modifier = Modifier.weight(1f), fontSize = 13.sp)
+                            Text(
+                                "%.0f min".format(lastWeekMs / 60_000.0),
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Spacer(Modifier.height(6.dp))
+                        val (txt, tint) = when {
+                            lastWeekMs == 0L -> "Sem base de comparação ainda." to MaterialTheme.colorScheme.onSurfaceVariant
+                            diffMs < 0 -> "-%.0f min vs. semana passada. Evoluindo!".format(-diffMs / 60_000.0) to VictoryGreen
+                            diffMs == 0L -> "Igual à semana passada. Dá pra cortar mais." to BrandAmber
+                            else -> "+%.0f min vs. semana passada. Hora de se confrontar.".format(diffMs / 60_000.0) to BrandRed
+                        }
+                        Text(txt, fontSize = 12.sp, color = tint)
+                    }
+                }
+
+                Spacer(Modifier.height(20.dp))
                 Text("Últimos confrontos", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(8.dp))
             }
@@ -141,6 +216,51 @@ fun StatsScreen(vm: AppViewModel, onBack: () -> Unit) {
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+/**
+ * Barras de tempo de uso por dia (últimos 7 dias, do mais antigo ao de hoje).
+ * Sem biblioteca externa: só Row + Box, então o APK continua leve.
+ */
+@Composable
+private fun UsageBarChart(days: List<Pair<LocalDate, Double>>) {
+    val max = days.maxOfOrNull { it.second } ?: 0.0
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(150.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        days.forEach { (date, minutes) ->
+            val fraction = if (max > 0) (minutes / max).toFloat() else 0f
+            val label = date.dayOfWeek
+                .getDisplayName(TextStyle.SHORT, Locale("pt", "BR"))
+                .lowercase()
+            Column(
+                modifier = Modifier.weight(1f),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.BottomCenter
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height((fraction.coerceAtLeast(0.03f) * 110).dp)
+                            .background(
+                                if (minutes > 0) BrandRed else MaterialTheme.colorScheme.surfaceVariant,
+                                RoundedCornerShape(6.dp)
+                            )
+                    )
+                }
+                Text(label, fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("%.0f".format(minutes), fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
             }
         }
     }

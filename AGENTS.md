@@ -8,12 +8,16 @@ Também contém, na raiz, um protótipo web legado de rotinas/hábitos (HTML/JS 
 - `android/` — app Android (package `com.lirouhabit.app`)
   - `data/` — Room (entities, DAOs, AppDatabase) + DataStore (`SettingsRepository`)
   - `monitor/` — coração do app: `MonitorService` (foreground + polling UsageStats 2s;
-    marcos por sessão: limite do app → notificação, 15 min → notificação pesada,
-    60 min → overlay full-screen; sessão com graça de 2 min ao trocar de aba — o
-    cronômetro continua; loop exige SÓ acesso ao uso, overlay é checada só no marco
-    de 60 min), `UsageMonitor` (eventos + fallback por lastTimeUsed), `OverlayManager`
+    DOIS cronômetros por app vilão:
+      • SESSÃO (contígua, graça de 2 min ao trocar de aba): limite configurável → notificação
+      • DIA (acumulativo, independente de entrar/sair, zera à meia-noite):
+        15 min → notificação pesada · 60 min → overlay full-screen
+    loop exige SÓ acesso ao uso, overlay é checada só no marco de 60 min),
+    `UsageMonitor` (eventos + fallback por lastTimeUsed), `OverlayManager`
     (ComposeView em WindowManager), `BlockingOverlay` (15s de fricção p/ continuar),
-    `PhraseBank` (frases reflexivas em 3 níveis — nunca clichês), `BootReceiver`
+    `PhraseBank` (frases reflexivas em 3 níveis — nunca clichês), `BootReceiver`,
+    `InterventionReceiver` (ações da notificação: "Fechar o app" = VICTORY + home,
+    "Ignorar"/swipe = DEFEAT + snooze 5 min), `MonitorLog` (log p/ tela secreta)
   - `ui/` — telas Compose em `ui/screens/`, `ui/vm/AppViewModel.kt` (VM único), `ui/Nav.kt`
   - fluxo de 1º uso: `IntroScreen` (apresentação de impacto) → `IntroDreamScreen`
     ("qual seu maior sonho?") → `IntroAppsScreen` (seleção múltipla de vilões) →
@@ -39,6 +43,8 @@ cd android
 - minSdk 26 / target 34 · zero backend, zero internet
 - Frases de intervenção em `monitor/PhraseBank.kt` com placeholders {sonho} {vicio} {app} {tempo}
 - Eventos de intervenção: TRIGGERED / VICTORY / DEFEAT (tabela `intervention_events`)
+- Tracker diário: tabela `daily_usage` (banco v2) alimenta `TrackerScreen` e os gráficos
+  de uso por dia / semana em `StatsScreen` (semana = seg→dom, zera na segunda)
 - Modo de teste SECRETO: 3 chacoalhadas fortes no celular abrem a `DevScreen`
   (estado das permissões, testes de notificação/overlay e log ao vivo do monitor).
   Nenhum botão visível leva até ela — é de propósito.

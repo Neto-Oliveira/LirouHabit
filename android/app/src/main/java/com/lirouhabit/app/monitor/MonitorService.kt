@@ -46,7 +46,8 @@ class MonitorService : Service() {
     private data class Milestone(
         val minutes: Int,
         val isOverlay: Boolean,
-        val phraseLevel: Int
+        val phraseLevel: Int,
+        val isDaily: Boolean = false
     )
 
     companion object {
@@ -77,6 +78,7 @@ class MonitorService : Service() {
 
         // Estado compartilhado com o InterventionReceiver (vitória/derrota)
         val firedMilestones = mutableMapOf<String, MutableSet<Int>>()
+        val dailyFiredMilestones = mutableMapOf<String, MutableSet<Int>>()
         val cooldownUntil = mutableMapOf<String, Long>()
 
         fun snooze(pkg: String, ms: Long) {
@@ -85,6 +87,7 @@ class MonitorService : Service() {
 
         fun resetMilestone(pkg: String, minutes: Int) {
             firedMilestones[pkg]?.remove(minutes)
+            dailyFiredMilestones[pkg]?.remove(minutes)
         }
 
         fun start(context: Context) {
@@ -299,6 +302,7 @@ class MonitorService : Service() {
             dailyDate = today
             dailyMs.clear()
             lastPersistedMinute.clear()
+            dailyFiredMilestones.clear() // novo dia: marcos diários podem rolar de novo
         }
         val prevDaily = dailyMs[tracked.packageName] ?: 0L
         val newDaily = prevDaily + elapsed
@@ -321,30 +325,50 @@ class MonitorService : Service() {
             }
         }
 
-        // Prova visual de que o tempo está acumulando (mesmo antes do marco)
+        // Prova visual de que o tempo está acumulando (sessão e dia)
         val wholeMinutes = (accumulatedMs / 60_000L).toInt()
         if (wholeMinutes > lastLoggedMinute) {
             lastLoggedMinute = wholeMinutes
-            MonitorLog.add("acumulado: ${wholeMinutes}min em ${tracked.appName}")
-            updateStatusNotification("${tracked.appName} • ${"%.1f".format(accumulatedMs / 60_000.0)} / ${tracked.limitMinutes} min")
+            MonitorLog.add("acumulado sessão: ${wholeMinutes}min em ${tracked.appName}")
+            updateStatusNotification(
+                "${tracked.appName} • sessão ${"%.1f".format(accumulatedMs / 60_000.0)} / ${tracked.limitMinutes} min" +
+                    " · dia ${"%.0f".format(newDaily / 60_000.0)} min"
+            )
         }
 
-        val fired = firedMilestones.getOrPut(foreground) { mutableSetOf() }
-        val milestone = milestonesFor(tracked).firstOrNull {
-            accumulatedMs >= it.minutes * 60_000L && it.minutes !in fired
-        } ?: return
-
-        if (milestone.isOverlay) {
-            val cooldown = cooldownUntil[foreground] ?: 0L
-            if (now < cooldown) return // snooze ativo — tenta de novo no próximo tick
+        // 1) Marco de SESSÃO (limite configurável): reseta a cada sessão, independe do dia.
+        val sessionFired = firedMilestones.getOrPut(foreground) { mutableSetOf() }
+        if (
+            tracked.limitMinutes !in sessionFired &&
+            accumulatedMs >= tracked.limitMinutes * 60_000L
+        ) {
+            sessionFired.add(tracked.limitMinutes)
+            MonitorLog.add("marco de sessão ${tracked.limitMinutes}min em ${tracked.appName} -> notificação")
+            intervene(tracked, Milestone(tracked.limitMinutes, false, 1, isDaily = false))
         }
 
-        fired.add(milestone.minutes)
-        MonitorLog.add(
-            "marco ${milestone.minutes}min em ${tracked.appName} -> " +
-                if (milestone.isOverlay) "tela de bloqueio" else "notificação"
+        // 2) Marcos DIÁRIOS acumulativos (15 min e 1h): não resetam ao trocar de aba/app.
+        //    Viram de novo só no dia seguinte.
+        val dailyFired = dailyFiredMilestones.getOrPut(foreground) { mutableSetOf() }
+        val dailyMilestones = listOf(
+            Milestone(MILESTONE_2_MIN, false, 2, isDaily = true),
+            Milestone(MILESTONE_OVERLAY_MIN, true, 3, isDaily = true)
         )
-        intervene(tracked, milestone)
+        for (milestone in dailyMilestones) {
+            if (milestone.minutes <= tracked.limitMinutes) continue // só acima do limite de sessão
+            if (newDaily < milestone.minutes * 60_000L || milestone.minutes in dailyFired) continue
+            if (milestone.isOverlay) {
+                val cooldown = cooldownUntil[foreground] ?: 0L
+                if (now < cooldown) continue // snooze ativo — tenta no próximo tick
+            }
+            dailyFired.add(milestone.minutes)
+            MonitorLog.add(
+                "marco DIÁRIO ${milestone.minutes}min em ${tracked.appName} -> " +
+                    if (milestone.isOverlay) "tela de bloqueio" else "notificação"
+            )
+            intervene(tracked, milestone)
+            break // um marco diário por tick
+        }
     }
 
     private fun pause(reason: String) {
@@ -358,25 +382,6 @@ class MonitorService : Service() {
         if (lastPausedReason != null) {
             lastPausedReason = null
             MonitorLog.add("monitor rodando (uso + apps ok)")
-        }
-    }
-
-    /**
-     * Marcos da sessão: limite do app → notificação, 15 min → notificação pesada,
-     * 60 min → overlay full-screen. Marcos menores que o limite do app são ignorados.
-     */
-    private fun milestonesFor(app: TrackedApp): List<Milestone> {
-        val raw = buildList {
-            add(app.limitMinutes to false)
-            if (MILESTONE_2_MIN > app.limitMinutes) add(MILESTONE_2_MIN to false)
-            if (MILESTONE_OVERLAY_MIN > app.limitMinutes) add(MILESTONE_OVERLAY_MIN to true)
-        }
-        return raw.mapIndexed { index, (min, overlay) ->
-            Milestone(
-                minutes = min,
-                isOverlay = overlay,
-                phraseLevel = if (overlay) 3 else (index + 1).coerceAtMost(2)
-            )
         }
     }
 
@@ -428,7 +433,11 @@ class MonitorService : Service() {
             // Derrota: snooze de 5 min e a tela de bloqueio volta
             cooldownUntil[app.packageName] =
                 System.currentTimeMillis() + SNOOZE_AFTER_DEFEAT_MS
-            firedMilestones[app.packageName]?.remove(milestone.minutes)
+            if (milestone.isDaily) {
+                dailyFiredMilestones[app.packageName]?.remove(milestone.minutes)
+            } else {
+                firedMilestones[app.packageName]?.remove(milestone.minutes)
+            }
         }
         scope.launch {
             db.eventDao().insert(
