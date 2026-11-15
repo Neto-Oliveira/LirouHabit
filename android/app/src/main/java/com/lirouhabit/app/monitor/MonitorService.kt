@@ -151,7 +151,12 @@ class MonitorService : Service() {
         overlayManager = OverlayManager(this)
         startAsForeground()
         observeData()
-        startLoop()
+        // Reidrata o acumulado diário ANTES de começar o loop: se o sistema matou
+        // o serviço hoje, os marcos diários (15min/1h) continuam de onde pararam.
+        scope.launch {
+            hydrateDaily()
+            startLoop()
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -239,6 +244,22 @@ class MonitorService : Service() {
         }
     }
 
+    private fun todayIso(): String =
+        java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+            .format(java.util.Date())
+
+    /** Recupera do banco o tempo acumulado de hoje (sobrevive a service kill). */
+    private suspend fun hydrateDaily() {
+        val today = todayIso()
+        runCatching {
+            val rows = db.dailyUsageDao().forDate(today)
+            dailyDate = today
+            dailyMs.clear()
+            rows.forEach { dailyMs[it.packageName] = it.totalMs }
+            MonitorLog.add("dia recuperado: ${rows.size} app(s) com tempo hoje")
+        }
+    }
+
     private fun startLoop() {
         scope.launch {
             while (isActive) {
@@ -296,8 +317,7 @@ class MonitorService : Service() {
         sessionMs = accumulatedMs
 
         // Tracker diário: acumula tempo por dia em cada app vilão
-        val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
-            .format(java.util.Date())
+        val today = todayIso()
         if (dailyDate != today) {
             dailyDate = today
             dailyMs.clear()
