@@ -53,6 +53,13 @@ class MonitorService : Service() {
         var isRunning = false
             private set
 
+        /** Sessão atual exposta para a tela de teste (nome do app + ms acumulados). */
+        @Volatile
+        var sessionApp: String? = null
+
+        @Volatile
+        var sessionMs = 0L
+
         const val CHANNEL_STATUS = "monitor_status"
         // v2: ID novo força a recriação do canal em instalações antigas
         // (som/vibração de canal ficam travados após a criação no Android 8+)
@@ -99,6 +106,7 @@ class MonitorService : Service() {
     // Diagnóstico (tela secreta de desenvolvimento)
     private var lastLoggedForeground: String? = null
     private var lastPausedReason: String? = null
+    private var lastLoggedMinute = 0
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -228,9 +236,19 @@ class MonitorService : Service() {
             accumulatedMs = 0L
             firedMilestones.remove(foreground)
             sessionPkg = foreground
+            lastLoggedMinute = 0
         }
         accumulatedMs += POLL_MS
         lastSeenAt = now
+        sessionApp = tracked.appName
+        sessionMs = accumulatedMs
+
+        // Prova visual de que o tempo está acumulando (mesmo antes do marco)
+        val wholeMinutes = (accumulatedMs / 60_000L).toInt()
+        if (wholeMinutes > lastLoggedMinute) {
+            lastLoggedMinute = wholeMinutes
+            MonitorLog.add("acumulado: ${wholeMinutes}min em ${tracked.appName}")
+        }
 
         val fired = firedMilestones.getOrPut(foreground) { mutableSetOf() }
         val milestone = milestonesFor(tracked).firstOrNull {
@@ -349,6 +367,9 @@ class MonitorService : Service() {
         sessionPkg = null
         accumulatedMs = 0L
         lastSeenAt = 0L
+        lastLoggedMinute = 0
+        sessionApp = null
+        sessionMs = 0L
     }
 
     private fun goHome() {

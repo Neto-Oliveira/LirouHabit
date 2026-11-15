@@ -61,6 +61,7 @@ fun DevScreen(vm: AppViewModel, onBack: () -> Unit) {
 
     var version by remember { mutableStateOf("?") }
     var detected by remember { mutableStateOf("…") }
+    var sessionText by remember { mutableStateOf("nenhuma") }
     var serviceRunning by remember { mutableStateOf(MonitorService.isRunning) }
     var logLines by remember { mutableStateOf(listOf<String>()) }
 
@@ -72,6 +73,10 @@ fun DevScreen(vm: AppViewModel, onBack: () -> Unit) {
         while (true) {
             detected = vm.detectForegroundNow()
             serviceRunning = MonitorService.isRunning
+            sessionText = MonitorService.sessionApp?.let { appName ->
+                val minutes = MonitorService.sessionMs / 60_000.0
+                "$appName — %.1f min".format(minutes)
+            } ?: "nenhuma"
             logLines = MonitorLog.recent().reversed()
             delay(1_500)
         }
@@ -140,6 +145,12 @@ fun DevScreen(vm: AppViewModel, onBack: () -> Unit) {
                         "Detectando agora: $detected",
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        "Sessão atual: $sessionText",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = BrandRed
                     )
                 }
             }
