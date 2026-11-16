@@ -20,6 +20,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.lirouhabit.app.data.Dream
 import com.lirouhabit.app.data.DailyUsage
+import com.lirouhabit.app.data.Hobby
 import com.lirouhabit.app.data.InterventionEvent
 import com.lirouhabit.app.data.SettingsRepository
 import com.lirouhabit.app.data.TrackedApp
@@ -69,6 +70,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     val dreams: StateFlow<List<Dream>> = db.dreamDao().all().asState(emptyList())
     val vices: StateFlow<List<Vice>> = db.viceDao().all().asState(emptyList())
+    val hobbies: StateFlow<List<Hobby>> = db.hobbyDao().all().asState(emptyList())
     val trackedApps: StateFlow<List<TrackedApp>> = db.trackedAppDao().all().asState(emptyList())
     val dailyUsage: StateFlow<List<DailyUsage>> = db.dailyUsageDao().all().asState(emptyList())
     val events: StateFlow<List<InterventionEvent>> = db.eventDao().recent().asState(emptyList())
@@ -98,6 +100,19 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun deleteVice(vice: Vice) = viewModelScope.launch { db.viceDao().delete(vice) }
+
+    // ---------- Hobbies ----------
+    fun saveHobby(id: Long = 0, text: String, lastPracticedAt: Long = 0L) = viewModelScope.launch {
+        if (text.isNotBlank()) {
+            db.hobbyDao().upsert(Hobby(id = id, text = text.trim(), lastPracticedAt = lastPracticedAt))
+        }
+    }
+
+    fun practiceHobby(hobby: Hobby) = viewModelScope.launch {
+        db.hobbyDao().upsert(hobby.copy(lastPracticedAt = System.currentTimeMillis()))
+    }
+
+    fun deleteHobby(hobby: Hobby) = viewModelScope.launch { db.hobbyDao().delete(hobby) }
 
     // ---------- Apps vilões ----------
     fun addTrackedApp(packageName: String, appName: String) = viewModelScope.launch {
@@ -179,7 +194,9 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             dream = dreams.value.firstOrNull()?.text ?: "",
             vice = vices.value.firstOrNull()?.text ?: "",
             app = "Instagram",
-            minutes = minutes
+            minutes = minutes,
+            hobby = hobbies.value.firstOrNull()?.text ?: "",
+            hobbyLastAt = hobbies.value.firstOrNull()?.lastPracticedAt ?: 0L
         )
         val notification = NotificationCompat.Builder(ctx, MonitorService.CHANNEL_ALERT)
             .setSmallIcon(R.drawable.ic_bolt)
@@ -208,13 +225,23 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         MonitorService.forceMilestone(getApplication())
     }
     /** Abre a tela de bloqueio REAL na hora — teste de ponta a ponta do overlay. */
-    fun testOverlay() {
-        MonitorLog.add("TESTE: abrindo tela de bloqueio")
+    fun testOverlay(level: Int = 3, minutes: Int = 60) {
+        MonitorLog.add("TESTE: abrindo tela de bloqueio nível $level")
+        val dream = dreams.value.firstOrNull()?.text ?: "Terminar a faculdade"
+        val phrase = PhraseBank.phrase(
+            level = level,
+            dream = dream,
+            vice = vices.value.firstOrNull()?.text ?: "",
+            app = "Instagram",
+            minutes = minutes,
+            hobby = hobbies.value.firstOrNull()?.text ?: "",
+            hobbyLastAt = hobbies.value.firstOrNull()?.lastPracticedAt ?: 0L
+        )
         OverlayManager(getApplication()).show(
-            phrase = "TESTE: 1 hora aqui. Não foi tempo que passou — foi a parte de hoje que o seu sonho não recebeu.",
+            phrase = phrase,
             appName = "Instagram (teste)",
-            dream = dreams.value.firstOrNull()?.text ?: "Terminar a faculdade",
-            elapsedMinutes = 60
+            dream = dream,
+            elapsedMinutes = minutes
         ) { }
     }
 

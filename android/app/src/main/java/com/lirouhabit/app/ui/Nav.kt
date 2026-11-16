@@ -9,6 +9,7 @@ import androidx.navigation.compose.rememberNavController
 import com.lirouhabit.app.ui.screens.AppsScreen
 import com.lirouhabit.app.ui.screens.DevScreen
 import com.lirouhabit.app.ui.screens.DreamsScreen
+import com.lirouhabit.app.ui.screens.HobbiesScreen
 import com.lirouhabit.app.ui.screens.HomeScreen
 import com.lirouhabit.app.ui.screens.IntroAppsScreen
 import com.lirouhabit.app.ui.screens.IntroDreamScreen
@@ -28,6 +29,7 @@ object Routes {
     const val HOME = "home"
     const val DREAMS = "dreams"
     const val VICES = "vices"
+    const val HOBBIES = "hobbies"
     const val APPS = "apps"
     const val STATS = "stats"
     const val SETTINGS = "settings"
@@ -77,6 +79,7 @@ fun AppNav(vm: AppViewModel) {
         composable(Routes.HOME) { HomeScreen(vm = vm, nav = nav) }
         composable(Routes.DREAMS) { DreamsScreen(vm = vm, onBack = { nav.popBackStack() }) }
         composable(Routes.VICES) { VicesScreen(vm = vm, onBack = { nav.popBackStack() }) }
+        composable(Routes.HOBBIES) { HobbiesScreen(vm = vm, onBack = { nav.popBackStack() }) }
         composable(Routes.APPS) { AppsScreen(vm = vm, onBack = { nav.popBackStack() }) }
         composable(Routes.STATS) { StatsScreen(vm = vm, onBack = { nav.popBackStack() }) }
         composable(Routes.SETTINGS) { SettingsScreen(vm = vm, nav = nav, onBack = { nav.popBackStack() }) }

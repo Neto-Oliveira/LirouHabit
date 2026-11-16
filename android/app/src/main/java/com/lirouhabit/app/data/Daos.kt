@@ -32,6 +32,18 @@ interface ViceDao {
 }
 
 @Dao
+interface HobbyDao {
+    @Query("SELECT * FROM hobbies ORDER BY createdAt DESC")
+    fun all(): Flow<List<Hobby>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsert(hobby: Hobby): Long
+
+    @Delete
+    suspend fun delete(hobby: Hobby)
+}
+
+@Dao
 interface TrackedAppDao {
     @Query("SELECT * FROM tracked_apps ORDER BY appName")
     fun all(): Flow<List<TrackedApp>>

@@ -8,13 +8,14 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
-    entities = [Dream::class, Vice::class, TrackedApp::class, InterventionEvent::class, DailyUsage::class],
-    version = 2,
+    entities = [Dream::class, Vice::class, Hobby::class, TrackedApp::class, InterventionEvent::class, DailyUsage::class],
+    version = 3,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun dreamDao(): DreamDao
     abstract fun viceDao(): ViceDao
+    abstract fun hobbyDao(): HobbyDao
     abstract fun trackedAppDao(): TrackedAppDao
     abstract fun eventDao(): EventDao
     abstract fun dailyUsageDao(): DailyUsageDao
@@ -37,13 +38,26 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL(
+                    "CREATE TABLE IF NOT EXISTS hobbies (" +
+                        "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                        "text TEXT NOT NULL, " +
+                        "lastPracticedAt INTEGER NOT NULL, " +
+                        "createdAt INTEGER NOT NULL" +
+                        ")"
+                )
+            }
+        }
+
         fun get(context: Context): AppDatabase =
             instance ?: synchronized(this) {
                 instance ?: Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
                     "lirouhabit.db"
-                ).addMigrations(MIGRATION_1_2).build().also { instance = it }
+                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3).build().also { instance = it }
             }
     }
 }

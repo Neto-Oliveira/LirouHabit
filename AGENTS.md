@@ -12,6 +12,8 @@ Também contém, na raiz, um protótipo web legado de rotinas/hábitos (HTML/JS 
       • SESSÃO (contígua, graça de 2 min ao trocar de aba): limite configurável → notificação
       • DIA (acumulativo, independente de entrar/sair, zera à meia-noite):
         15 min → notificação pesada · 60 min → overlay full-screen
+        após 1h, NOVA entrada no vilão → overlay agressivo "Vale mesmo a pena?"
+        (acumulado diário é reidratado do banco ao reiniciar o serviço)
     loop exige SÓ acesso ao uso, overlay é checada só no marco de 60 min),
     `UsageMonitor` (eventos + fallback por lastTimeUsed), `OverlayManager`
     (ComposeView em WindowManager), `BlockingOverlay` (15s de fricção p/ continuar),
@@ -41,7 +43,10 @@ cd android
 - Kotlin + Compose Material 3, tema escuro com vermelho agressivo (#E53935)
 - DI manual (sem Hilt/Koin) — proposital, para manter o APK leve
 - minSdk 26 / target 34 · zero backend, zero internet
-- Frases de intervenção em `monitor/PhraseBank.kt` com placeholders {sonho} {vicio} {app} {tempo}
+- Frases em `monitor/PhraseBank.kt`: {sonho} {vicio} {app} {tempo} {hobby} {hobby_tempo};
+  níveis 1/2/3 + reentrada (4), sorteio sem repetir a última frase do mesmo nível
+- Hobbies (banco v3): nome + `lastPracticedAt`; botão "Pratiquei agora" alimenta
+  mensagens "seu hobby está há X dias sem sua atenção"
 - Eventos de intervenção: TRIGGERED / VICTORY / DEFEAT (tabela `intervention_events`)
 - Tracker diário: tabela `daily_usage` (banco v2) alimenta `TrackerScreen` e os gráficos
   de uso por dia / semana em `StatsScreen` (semana = seg→dom, zera na segunda)

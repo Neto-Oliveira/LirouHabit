@@ -180,6 +180,9 @@ fun HomeScreen(vm: AppViewModel, nav: NavController) {
             NavCard(R.drawable.ic_chain, "Vícios & Maus Hábitos", "O que você quer largar") {
                 nav.navigate(Routes.VICES)
             }
+            NavCard(R.drawable.ic_star, "Meus Hobbies", "O que está sem sua atenção") {
+                nav.navigate(Routes.HOBBIES)
+            }
             NavCard(R.drawable.ic_phone, "Apps Vilões", "Quem está roubando seu tempo") {
                 nav.navigate(Routes.APPS)
             }

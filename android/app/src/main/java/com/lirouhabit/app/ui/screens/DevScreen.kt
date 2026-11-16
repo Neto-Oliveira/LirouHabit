@@ -183,6 +183,11 @@ fun DevScreen(vm: AppViewModel, onBack: () -> Unit) {
                     ) { Text("Tela de bloqueio (overlay 1h)") }
                     Spacer(Modifier.height(8.dp))
                     OutlinedButton(
+                        onClick = { vm.testOverlay(level = 4, minutes = 75) },
+                        modifier = Modifier.fillMaxWidth()
+                    ) { Text("Reentrada pós-1h (\"Vale mesmo a pena?\")") }
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedButton(
                         onClick = { vm.forceMilestone() },
                         modifier = Modifier.fillMaxWidth()
                     ) { Text("Forçar marco (via serviço) — testa ponta a ponta") }

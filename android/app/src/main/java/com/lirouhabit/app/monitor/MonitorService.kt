@@ -33,9 +33,10 @@ import kotlinx.coroutines.launch
  * Serviço em foreground que cronometra o uso dos apps vilões.
  *
  * Marcos por sessão (a intervenção escala — sem tela cheia no começo):
- *  - limite do app (default 5 min) → notificação reflexiva
- *  - 15 min → notificação mais pesada
- *  - 60 min → tela de bloqueio full-screen por cima do app
+ *  - limite de SESSÃO (default 5 min) → notificação reflexiva
+ *  - 15 min ACUMULADOS no dia → notificação mais pesada
+ *  - 60 min ACUMULADOS no dia → tela de bloqueio full-screen
+ *  - cada nova entrada no vilão depois da 1h → confronto "Vale mesmo a pena?"
  *
  * Troca de aba/app: a sessão sobrevive por GRACE_MS (2 min). Saiu do vilão e
  * voltou rápido → o cronômetro CONTINUA de onde parou.
@@ -120,6 +121,8 @@ class MonitorService : Service() {
     @Volatile private var trackedApps: Map<String, TrackedApp> = emptyMap()
     @Volatile private var topDream: String = ""
     @Volatile private var topVice: String = ""
+    @Volatile private var topHobby: String = ""
+    @Volatile private var topHobbyLastAt: Long = 0L
 
     // Sessão atual (com graça de 2 min ao trocar de app)
     private var sessionPkg: String? = null
@@ -130,6 +133,7 @@ class MonitorService : Service() {
 
     // Diagnóstico (tela secreta de desenvolvimento)
     private var lastLoggedForeground: String? = null
+    private var lastReentryForeground: String? = null
     private var lastPausedReason: String? = null
     private var lastLoggedMinute = 0
     private var lastStatusMinute = -1
@@ -242,6 +246,13 @@ class MonitorService : Service() {
                 topVice = list.firstOrNull()?.text.orEmpty()
             }
         }
+        scope.launch {
+            db.hobbyDao().all().collect { list ->
+                val hobby = list.firstOrNull()
+                topHobby = hobby?.text.orEmpty()
+                topHobbyLastAt = hobby?.lastPracticedAt ?: 0L
+            }
+        }
     }
 
     private fun todayIso(): String =
@@ -292,6 +303,9 @@ class MonitorService : Service() {
             lastLoggedForeground = foreground
             MonitorLog.add("foreground: $foreground")
         }
+        // Detecta NOVA entrada (serve para o confronto pós-1h ao voltar ao vilão)
+        val enteringNow = foreground != lastReentryForeground
+        lastReentryForeground = foreground
         if (foreground == packageName) return // LirouHabit aberto: pausa, não reseta
 
         val tracked = trackedApps[foreground]
@@ -387,7 +401,24 @@ class MonitorService : Service() {
                     if (milestone.isOverlay) "tela de bloqueio" else "notificação"
             )
             intervene(tracked, milestone)
-            break // um marco diário por tick
+            return // um marco por tick; reentrada só acontece se nada disparou agora
+        }
+
+        // 3) Depois de 1h no dia: TODA NOVA ENTRADA no vilão traz de volta a tela
+        // de bloqueio, agora com uma pergunta direta ("Vale mesmo a pena?").
+        val dailyMinutes = (newDaily / 60_000L).toInt()
+        val cooldown = cooldownUntil[foreground] ?: 0L
+        if (
+            enteringNow &&
+            dailyMinutes >= MILESTONE_OVERLAY_MIN &&
+            !overlayManager.isShowing &&
+            now >= cooldown
+        ) {
+            MonitorLog.add("reentrada pós-1h em ${tracked.appName} -> confronto")
+            intervene(
+                tracked,
+                Milestone(dailyMinutes, isOverlay = true, phraseLevel = 4, isDaily = true)
+            )
         }
     }
 
@@ -412,7 +443,9 @@ class MonitorService : Service() {
             dream = topDream,
             vice = topVice,
             app = app.appName,
-            minutes = milestone.minutes
+            minutes = milestone.minutes,
+            hobby = topHobby,
+            hobbyLastAt = topHobbyLastAt
         )
 
         scope.launch {

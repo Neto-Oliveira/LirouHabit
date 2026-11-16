@@ -18,6 +18,14 @@ data class Vice(
     val createdAt: Long = System.currentTimeMillis()
 )
 
+@Entity(tableName = "hobbies")
+data class Hobby(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val text: String,
+    val lastPracticedAt: Long = 0L,
+    val createdAt: Long = System.currentTimeMillis()
+)
+
 @Entity(tableName = "tracked_apps")
 data class TrackedApp(
     @PrimaryKey val packageName: String,
