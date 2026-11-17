@@ -75,6 +75,7 @@ class MonitorService : Service() {
         private const val MILESTONE_OVERLAY_MIN = 60
         private const val SNOOZE_AFTER_DEFEAT_MS = 5 * 60_000L
         private const val GRACE_MS = 2 * 60_000L // troca de aba não reseta a sessão
+        private const val GROUP_KEY = "__all_villains__"
         const val ACTION_FORCE_MILESTONE = "com.lirouhabit.app.FORCE_MILESTONE"
 
         // Estado compartilhado com o InterventionReceiver (vitória/derrota)
@@ -118,6 +119,7 @@ class MonitorService : Service() {
 
     @Volatile private var monitorEnabled = false
     @Volatile private var escalationOn = true
+    @Volatile private var combineAppsTime = false
     @Volatile private var trackedApps: Map<String, TrackedApp> = emptyMap()
     @Volatile private var topDream: String = ""
     @Volatile private var topVice: String = ""
@@ -215,6 +217,13 @@ class MonitorService : Service() {
         }
         scope.launch { settings.escalationOn.collect { escalationOn = it } }
         scope.launch {
+            settings.combineAppsTime.collect {
+                combineAppsTime = it
+                resetSession()
+                MonitorLog.add("tempo acumulativo entre vilões=$it")
+            }
+        }
+        scope.launch {
             db.trackedAppDao().all().collect { list ->
                 val enabled = list.filter { it.enabled }
                 // Se o limite de algum app mudou, reinicia a sessão desse app
@@ -228,7 +237,12 @@ class MonitorService : Service() {
                         MonitorLog.add("limite alterado para ${app.limitMinutes}min — sessão reiniciada")
                     }
                 }
-                previousLimits = enabled.associate { it.packageName to it.limitMinutes }
+                val currentLimits = enabled.associate { it.packageName to it.limitMinutes }
+                // Mudou a lista/limite dos apps enquanto a soma estava ativa: nova sessão única.
+                if (sessionPkg == GROUP_KEY && previousLimits != currentLimits) {
+                    resetSession()
+                }
+                previousLimits = currentLimits
                 trackedApps = enabled.associateBy { it.packageName }
                 MonitorLog.add(
                     "apps vilões (${enabled.size}): " +
@@ -318,19 +332,31 @@ class MonitorService : Service() {
             return
         }
 
-        if (sessionPkg != foreground) {
-            // Vilão diferente (ou graça expirada): sessão nova
+        // Modo acumulativo: todos os vilões viram UM único alvo lógico.
+        // Trocar Instagram → TikTok mantém sessão, dia, marcos e cooldown.
+        val aggregate = combineAppsTime && trackedApps.size > 1
+        val subjectKey = if (aggregate) GROUP_KEY else foreground
+        val subject = if (aggregate) {
+            tracked.copy(
+                packageName = GROUP_KEY,
+                appName = "Apps vilões (soma)",
+                limitMinutes = trackedApps.values.minOf { it.limitMinutes }
+            )
+        } else tracked
+
+        if (sessionPkg != subjectKey) {
+            // Mudou de alvo (ou graça expirada): sessão nova
             accumulatedMs = 0L
-            firedMilestones.remove(foreground)
-            sessionPkg = foreground
+            firedMilestones.remove(subjectKey)
+            sessionPkg = subjectKey
             lastLoggedMinute = 0
         }
         accumulatedMs += elapsed
         lastSeenAt = now
-        sessionApp = tracked.appName
+        sessionApp = subject.appName
         sessionMs = accumulatedMs
 
-        // Tracker diário: acumula tempo por dia em cada app vilão
+        // Tracker diário continua individual para os gráficos.
         val today = todayIso()
         if (dailyDate != today) {
             dailyDate = today
@@ -359,64 +385,69 @@ class MonitorService : Service() {
             }
         }
 
+        // No modo acumulativo, o tempo de todos os apps habilitados alimenta os marcos.
+        val subjectDailyMs = if (aggregate) {
+            trackedApps.keys.sumOf { dailyMs[it] ?: 0L }
+        } else newDaily
+
         // Prova visual de que o tempo está acumulando (sessão e dia)
         val wholeMinutes = (accumulatedMs / 60_000L).toInt()
         if (wholeMinutes > lastLoggedMinute) {
             lastLoggedMinute = wholeMinutes
-            MonitorLog.add("acumulado sessão: ${wholeMinutes}min em ${tracked.appName}")
+            MonitorLog.add("acumulado sessão: ${wholeMinutes}min em ${subject.appName}")
             updateStatusNotification(
-                "${tracked.appName} • sessão ${"%.1f".format(accumulatedMs / 60_000.0)} / ${tracked.limitMinutes} min" +
-                    " · dia ${"%.0f".format(newDaily / 60_000.0)} min"
+                "${subject.appName} • sessão ${"%.1f".format(accumulatedMs / 60_000.0)} / ${subject.limitMinutes} min" +
+                    " · dia ${"%.0f".format(subjectDailyMs / 60_000.0)} min"
             )
         }
 
         // 1) Marco de SESSÃO (limite configurável): reseta a cada sessão, independe do dia.
-        val sessionFired = firedMilestones.getOrPut(foreground) { mutableSetOf() }
+        val sessionFired = firedMilestones.getOrPut(subjectKey) { mutableSetOf() }
         if (
-            tracked.limitMinutes !in sessionFired &&
-            accumulatedMs >= tracked.limitMinutes * 60_000L
+            subject.limitMinutes !in sessionFired &&
+            accumulatedMs >= subject.limitMinutes * 60_000L
         ) {
-            sessionFired.add(tracked.limitMinutes)
-            MonitorLog.add("marco de sessão ${tracked.limitMinutes}min em ${tracked.appName} -> notificação")
-            intervene(tracked, Milestone(tracked.limitMinutes, false, 1, isDaily = false))
+            sessionFired.add(subject.limitMinutes)
+            MonitorLog.add("marco de sessão ${subject.limitMinutes}min em ${subject.appName} -> notificação")
+            intervene(subject, Milestone(subject.limitMinutes, false, 1, isDaily = false))
         }
 
         // 2) Marcos DIÁRIOS acumulativos (15 min e 1h): não resetam ao trocar de aba/app.
         //    Viram de novo só no dia seguinte.
-        val dailyFired = dailyFiredMilestones.getOrPut(foreground) { mutableSetOf() }
+        val dailyFired = dailyFiredMilestones.getOrPut(subjectKey) { mutableSetOf() }
         val dailyMilestones = listOf(
             Milestone(MILESTONE_2_MIN, false, 2, isDaily = true),
             Milestone(MILESTONE_OVERLAY_MIN, true, 3, isDaily = true)
         )
         for (milestone in dailyMilestones) {
-            if (milestone.minutes <= tracked.limitMinutes) continue // só acima do limite de sessão
-            if (newDaily < milestone.minutes * 60_000L || milestone.minutes in dailyFired) continue
+            if (milestone.minutes <= subject.limitMinutes) continue // só acima do limite de sessão
+            if (subjectDailyMs < milestone.minutes * 60_000L || milestone.minutes in dailyFired) continue
             if (milestone.isOverlay) {
-                val cooldown = cooldownUntil[foreground] ?: 0L
+                val cooldown = cooldownUntil[subjectKey] ?: 0L
                 if (now < cooldown) continue // snooze ativo — tenta no próximo tick
             }
             dailyFired.add(milestone.minutes)
             MonitorLog.add(
-                "marco DIÁRIO ${milestone.minutes}min em ${tracked.appName} -> " +
+                "marco DIÁRIO ${milestone.minutes}min em ${subject.appName} -> " +
                     if (milestone.isOverlay) "tela de bloqueio" else "notificação"
             )
-            intervene(tracked, milestone)
+            intervene(subject, milestone)
             return // um marco por tick; reentrada só acontece se nada disparou agora
         }
 
         // 3) Depois de 1h no dia: TODA NOVA ENTRADA no vilão traz de volta a tela
         // de bloqueio, agora com uma pergunta direta ("Vale mesmo a pena?").
-        val dailyMinutes = (newDaily / 60_000L).toInt()
-        val cooldown = cooldownUntil[foreground] ?: 0L
+        val dailyMinutes = (subjectDailyMs / 60_000L).toInt()
+        val cooldown = cooldownUntil[subjectKey] ?: 0L
         if (
             enteringNow &&
             dailyMinutes >= MILESTONE_OVERLAY_MIN &&
             !overlayManager.isShowing &&
             now >= cooldown
         ) {
-            MonitorLog.add("reentrada pós-1h em ${tracked.appName} -> confronto")
+            MonitorLog.add("reentrada pós-1h em ${subject.appName} -> confronto")
             intervene(
-                tracked,
+                subject,
                 Milestone(dailyMinutes, isOverlay = true, phraseLevel = 4, isDaily = true)
             )
         }

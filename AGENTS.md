@@ -14,6 +14,9 @@ Também contém, na raiz, um protótipo web legado de rotinas/hábitos (HTML/JS 
         15 min → notificação pesada · 60 min → overlay full-screen
         após 1h, NOVA entrada no vilão → overlay agressivo "Vale mesmo a pena?"
         (acumulado diário é reidratado do banco ao reiniciar o serviço)
+    opção "Tempo acumulativo entre vilões" (Configurações): com 2+ apps habilitados,
+    todos viram um alvo lógico único (`GROUP_KEY`) para sessão/dia/cooldown,
+    limit = menor entre os apps; gráficos continuam por app individual
     loop exige SÓ acesso ao uso, overlay é checada só no marco de 60 min),
     `UsageMonitor` (eventos + fallback por lastTimeUsed), `OverlayManager`
     (ComposeView em WindowManager), `BlockingOverlay` (15s de fricção p/ continuar),

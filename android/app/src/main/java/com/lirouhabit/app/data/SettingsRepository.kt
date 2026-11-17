@@ -19,6 +19,7 @@ class SettingsRepository(private val context: Context) {
         private val KEY_ONBOARDING_DONE = booleanPreferencesKey("onboarding_done")
         private val KEY_ESCALATION = booleanPreferencesKey("escalation_on")
         private val KEY_MONITOR_TOGGLED_ONCE = booleanPreferencesKey("monitor_toggled_once")
+        private val KEY_COMBINE_APPS = booleanPreferencesKey("combine_apps_time")
         const val DEFAULT_LIMIT = 5
     }
 
@@ -33,6 +34,10 @@ class SettingsRepository(private val context: Context) {
 
     val escalationOn: Flow<Boolean> =
         context.dataStore.data.map { it[KEY_ESCALATION] ?: true }
+
+    /** Soma todos os apps vilões como um único balde de tempo (sem "trocar de refúgio"). */
+    val combineAppsTime: Flow<Boolean> =
+        context.dataStore.data.map { it[KEY_COMBINE_APPS] ?: false }
 
     /** Se o usuário já ligou/desligou o monitor manualmente alguma vez. */
     val monitorToggledOnce: Flow<Boolean> =
@@ -60,5 +65,9 @@ class SettingsRepository(private val context: Context) {
 
     suspend fun setEscalationOn(value: Boolean) {
         context.dataStore.edit { it[KEY_ESCALATION] = value }
+    }
+
+    suspend fun setCombineAppsTime(value: Boolean) {
+        context.dataStore.edit { it[KEY_COMBINE_APPS] = value }
     }
 }

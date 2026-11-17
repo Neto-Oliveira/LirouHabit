@@ -59,6 +59,8 @@ fun SettingsScreen(vm: AppViewModel, nav: NavController, onBack: () -> Unit) {
     val context = LocalContext.current
     val defaultLimit by vm.defaultLimit.collectAsState()
     val escalation by vm.escalationOn.collectAsState()
+    val combineApps by vm.combineAppsTime.collectAsState()
+    val trackedApps by vm.trackedApps.collectAsState()
     var detectedNow by remember { mutableStateOf("…") }
     val versionName = remember {
         runCatching {
@@ -139,6 +141,48 @@ fun SettingsScreen(vm: AppViewModel, nav: NavController, onBack: () -> Unit) {
                         )
                     }
                     Switch(checked = escalation, onCheckedChange = { vm.setEscalation(it) })
+                }
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            // Soma dos apps vilões (evita trocar de app para escapar do limite)
+            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_layers),
+                                contentDescription = null,
+                                tint = BrandRed,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text("Tempo acumulativo entre vilões", fontWeight = FontWeight.Bold)
+                        }
+                        Text(
+                            "Instagram + TikTok +… contam como UM app. Usa o menor limite entre eles.",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        if (trackedApps.count { it.enabled } < 2) {
+                            Text(
+                                "Adicione pelo menos 2 apps para usar a soma.",
+                                fontSize = 11.sp,
+                                color = BrandRed
+                            )
+                        }
+                    }
+                    Switch(
+                        checked = combineApps,
+                        enabled = combineApps || trackedApps.count { it.enabled } >= 2,
+                        onCheckedChange = { vm.setCombineAppsTime(it) }
+                    )
                 }
             }
 

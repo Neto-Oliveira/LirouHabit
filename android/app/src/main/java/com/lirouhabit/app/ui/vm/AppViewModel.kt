@@ -82,6 +82,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     val monitorEnabled: StateFlow<Boolean> = settings.monitorEnabled.asState(false)
     val onboardingDone: StateFlow<Boolean> = settings.onboardingDone.asState(false)
     val escalationOn: StateFlow<Boolean> = settings.escalationOn.asState(true)
+    val combineAppsTime: StateFlow<Boolean> = settings.combineAppsTime.asState(false)
 
     // ---------- Sonhos ----------
     fun saveDream(id: Long = 0, text: String, priority: Int) = viewModelScope.launch {
@@ -159,6 +160,9 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     // ---------- Configurações ----------
     fun setDefaultLimit(value: Int) = viewModelScope.launch { settings.setDefaultLimit(value) }
     fun setEscalation(value: Boolean) = viewModelScope.launch { settings.setEscalationOn(value) }
+    fun setCombineAppsTime(value: Boolean) = viewModelScope.launch {
+        settings.setCombineAppsTime(value)
+    }
 
     fun setMonitor(on: Boolean) = viewModelScope.launch {
         settings.setMonitorToggledOnce(true)
