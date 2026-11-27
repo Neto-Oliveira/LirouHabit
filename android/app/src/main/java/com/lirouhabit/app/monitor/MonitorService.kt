@@ -21,6 +21,7 @@ import com.lirouhabit.app.data.DailyUsage
 import com.lirouhabit.app.data.InterventionEvent
 import com.lirouhabit.app.data.SettingsRepository
 import com.lirouhabit.app.data.TrackedApp
+import com.lirouhabit.app.data.WorkRoutine
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -72,7 +73,6 @@ class MonitorService : Service() {
         private const val ALERT_NOTIF_ID = 2
         private const val POLL_MS = 2_000L
         private const val MILESTONE_2_MIN = 15
-        private const val MILESTONE_OVERLAY_MIN = 60
         private const val SNOOZE_AFTER_DEFEAT_MS = 5 * 60_000L
         private const val GRACE_MS = 2 * 60_000L // troca de aba não reseta a sessão
         private const val GROUP_KEY = "__all_villains__"
@@ -120,6 +120,14 @@ class MonitorService : Service() {
     @Volatile private var monitorEnabled = false
     @Volatile private var escalationOn = true
     @Volatile private var combineAppsTime = false
+    @Volatile private var sessionAlertsOn = true
+    @Volatile private var dailyWarningOn = true
+    @Volatile private var blockingOn = true
+    @Volatile private var blockAtSessionLimit = false
+    @Volatile private var reentryOn = true
+    @Volatile private var dailyOverlayMinutes = 60
+    @Volatile private var workAlertsOn = true
+    @Volatile private var workRoutines: List<WorkRoutine> = emptyList()
     @Volatile private var trackedApps: Map<String, TrackedApp> = emptyMap()
     @Volatile private var topDream: String = ""
     @Volatile private var topVice: String = ""
@@ -143,6 +151,7 @@ class MonitorService : Service() {
     private var dailyDate: String = ""
     private val dailyMs = mutableMapOf<String, Long>()
     private val lastPersistedMinute = mutableMapOf<String, Int>()
+    private var lastWorkNagAt = 0L
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -216,6 +225,14 @@ class MonitorService : Service() {
             }
         }
         scope.launch { settings.escalationOn.collect { escalationOn = it } }
+        scope.launch { settings.sessionAlertsOn.collect { sessionAlertsOn = it } }
+        scope.launch { settings.dailyWarningOn.collect { dailyWarningOn = it } }
+        scope.launch { settings.blockingOn.collect { blockingOn = it } }
+        scope.launch { settings.blockAtSessionLimit.collect { blockAtSessionLimit = it } }
+        scope.launch { settings.reentryOn.collect { reentryOn = it } }
+        scope.launch { settings.dailyOverlayMinutes.collect { dailyOverlayMinutes = it } }
+        scope.launch { settings.workAlertsOn.collect { workAlertsOn = it } }
+        scope.launch { db.workRoutineDao().all().collect { workRoutines = it } }
         scope.launch {
             settings.combineAppsTime.collect {
                 combineAppsTime = it
@@ -401,24 +418,56 @@ class MonitorService : Service() {
             )
         }
 
-        // 1) Marco de SESSÃO (limite configurável): reseta a cada sessão, independe do dia.
-        val sessionFired = firedMilestones.getOrPut(subjectKey) { mutableSetOf() }
-        if (
-            subject.limitMinutes !in sessionFired &&
-            accumulatedMs >= subject.limitMinutes * 60_000L
-        ) {
-            sessionFired.add(subject.limitMinutes)
-            MonitorLog.add("marco de sessão ${subject.limitMinutes}min em ${subject.appName} -> notificação")
-            intervene(subject, Milestone(subject.limitMinutes, false, 1, isDaily = false))
+        // Extra de ROTINA DE TRABALHO: durante a janela, 1 alerta por minuto no vilão.
+        if (workAlertsOn && !overlayManager.isShowing) {
+            val localTime = java.time.LocalTime.now()
+            val minuteOfDay = localTime.hour * 60 + localTime.minute
+            val routine = workRoutines.firstOrNull {
+                it.isActiveAt(java.time.LocalDate.now().dayOfWeek.value, minuteOfDay)
+            }
+            if (routine != null && now - lastWorkNagAt >= 60_000L) {
+                lastWorkNagAt = now
+                fireWorkNotification(tracked, routine)
+                return // nunca duplica com outro marco no mesmo tick
+            }
         }
 
-        // 2) Marcos DIÁRIOS acumulativos (15 min e 1h): não resetam ao trocar de aba/app.
-        //    Viram de novo só no dia seguinte.
+        // 1) Marco de SESSÃO (limite configurável): notificação ou tela de bloqueio.
+        val sessionFired = firedMilestones.getOrPut(subjectKey) { mutableSetOf() }
+        val sessionCooldown = cooldownUntil[subjectKey] ?: 0L
+        if (
+            (sessionAlertsOn || blockAtSessionLimit) &&
+            subject.limitMinutes !in sessionFired &&
+            accumulatedMs >= subject.limitMinutes * 60_000L &&
+            now >= sessionCooldown
+        ) {
+            sessionFired.add(subject.limitMinutes)
+            MonitorLog.add(
+                "marco de sessão ${subject.limitMinutes}min em ${subject.appName} -> " +
+                    if (blockAtSessionLimit) "tela de bloqueio" else "notificação"
+            )
+            intervene(
+                subject,
+                Milestone(
+                    subject.limitMinutes,
+                    isOverlay = blockAtSessionLimit,
+                    phraseLevel = if (blockAtSessionLimit) 3 else 1,
+                    isDaily = false
+                )
+            )
+            if (blockAtSessionLimit) return
+        }
+
+        // 2) Marcos DIÁRIOS acumulativos: não resetam ao trocar de aba/app.
         val dailyFired = dailyFiredMilestones.getOrPut(subjectKey) { mutableSetOf() }
-        val dailyMilestones = listOf(
-            Milestone(MILESTONE_2_MIN, false, 2, isDaily = true),
-            Milestone(MILESTONE_OVERLAY_MIN, true, 3, isDaily = true)
-        )
+        val dailyMilestones = buildList {
+            if (dailyWarningOn && MILESTONE_2_MIN < dailyOverlayMinutes) {
+                add(Milestone(MILESTONE_2_MIN, false, 2, isDaily = true))
+            }
+            if (blockingOn) {
+                add(Milestone(dailyOverlayMinutes, true, 3, isDaily = true))
+            }
+        }
         for (milestone in dailyMilestones) {
             if (milestone.minutes <= subject.limitMinutes) continue // só acima do limite de sessão
             if (subjectDailyMs < milestone.minutes * 60_000L || milestone.minutes in dailyFired) continue
@@ -441,7 +490,8 @@ class MonitorService : Service() {
         val cooldown = cooldownUntil[subjectKey] ?: 0L
         if (
             enteringNow &&
-            dailyMinutes >= MILESTONE_OVERLAY_MIN &&
+            reentryOn && blockingOn &&
+            dailyMinutes >= dailyOverlayMinutes &&
             !overlayManager.isShowing &&
             now >= cooldown
         ) {
@@ -600,7 +650,36 @@ class MonitorService : Service() {
         }
     }
 
-    private fun fireAlertNotification(app: TrackedApp, phrase: String, minutes: Int) {
+    /** Alerta extra de rotina de trabalho (1x/min enquanto o vilão está aberto). */
+    private fun fireWorkNotification(app: TrackedApp, routine: WorkRoutine) {
+        val dreamTail = if (topDream.isBlank()) "" else " Seu foco: \"$topDream\"."
+        val phrase = "Ei, você não devia estar aqui — hora do trabalho. " +
+            "${app.appName} pode esperar.$dreamTail"
+        MonitorLog.add("trabalho (${routine.label}): alerta em ${app.appName}")
+        scope.launch {
+            db.eventDao().insert(
+                InterventionEvent(
+                    packageName = app.packageName,
+                    appName = app.appName,
+                    outcome = "TRIGGERED",
+                    phrase = phrase
+                )
+            )
+        }
+        fireAlertNotification(
+            app = app,
+            phrase = phrase,
+            minutes = 0,
+            title = "Hora do trabalho • ${routine.label}"
+        )
+    }
+
+    private fun fireAlertNotification(
+        app: TrackedApp,
+        phrase: String,
+        minutes: Int,
+        title: String = "${app.appName} • $minutes min"
+    ) {
         val closeIntent = Intent(this, InterventionReceiver::class.java).apply {
             action = InterventionReceiver.ACTION_CLOSE_APP
             putExtra(InterventionReceiver.EXTRA_PKG, app.packageName)
@@ -638,7 +717,7 @@ class MonitorService : Service() {
 
         val notification = NotificationCompat.Builder(this, CHANNEL_ALERT)
             .setSmallIcon(R.drawable.ic_bolt)
-            .setContentTitle("${app.appName} • $minutes min")
+            .setContentTitle(title)
             .setContentText(phrase)
             .setStyle(NotificationCompat.BigTextStyle().bigText(phrase))
             .setPriority(NotificationCompat.PRIORITY_HIGH)

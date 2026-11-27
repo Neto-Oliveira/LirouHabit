@@ -56,6 +56,18 @@ interface TrackedAppDao {
 }
 
 @Dao
+interface WorkRoutineDao {
+    @Query("SELECT * FROM work_routines ORDER BY startMinute, createdAt")
+    fun all(): Flow<List<WorkRoutine>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsert(routine: WorkRoutine): Long
+
+    @Delete
+    suspend fun delete(routine: WorkRoutine)
+}
+
+@Dao
 interface EventDao {
     @Insert
     suspend fun insert(event: InterventionEvent): Long

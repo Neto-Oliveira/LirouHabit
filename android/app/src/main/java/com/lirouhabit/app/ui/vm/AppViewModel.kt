@@ -25,6 +25,7 @@ import com.lirouhabit.app.data.InterventionEvent
 import com.lirouhabit.app.data.SettingsRepository
 import com.lirouhabit.app.data.TrackedApp
 import com.lirouhabit.app.data.Vice
+import com.lirouhabit.app.data.WorkRoutine
 import com.lirouhabit.app.R
 import com.lirouhabit.app.lirouApp
 import com.lirouhabit.app.monitor.MonitorLog
@@ -83,6 +84,14 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     val onboardingDone: StateFlow<Boolean> = settings.onboardingDone.asState(false)
     val escalationOn: StateFlow<Boolean> = settings.escalationOn.asState(true)
     val combineAppsTime: StateFlow<Boolean> = settings.combineAppsTime.asState(false)
+    val sessionAlertsOn: StateFlow<Boolean> = settings.sessionAlertsOn.asState(true)
+    val dailyWarningOn: StateFlow<Boolean> = settings.dailyWarningOn.asState(true)
+    val blockingOn: StateFlow<Boolean> = settings.blockingOn.asState(true)
+    val blockAtSessionLimit: StateFlow<Boolean> = settings.blockAtSessionLimit.asState(false)
+    val reentryOn: StateFlow<Boolean> = settings.reentryOn.asState(true)
+    val dailyOverlayMinutes: StateFlow<Int> = settings.dailyOverlayMinutes.asState(60)
+    val workAlertsOn: StateFlow<Boolean> = settings.workAlertsOn.asState(true)
+    val workRoutines: StateFlow<List<WorkRoutine>> = db.workRoutineDao().all().asState(emptyList())
 
     // ---------- Sonhos ----------
     fun saveDream(id: Long = 0, text: String, priority: Int) = viewModelScope.launch {
@@ -162,6 +171,26 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     fun setEscalation(value: Boolean) = viewModelScope.launch { settings.setEscalationOn(value) }
     fun setCombineAppsTime(value: Boolean) = viewModelScope.launch {
         settings.setCombineAppsTime(value)
+    }
+    fun setSessionAlertsOn(v: Boolean) = viewModelScope.launch { settings.setSessionAlertsOn(v) }
+    fun setDailyWarningOn(v: Boolean) = viewModelScope.launch { settings.setDailyWarningOn(v) }
+    fun setBlockingOn(v: Boolean) = viewModelScope.launch { settings.setBlockingOn(v) }
+    fun setBlockAtSessionLimit(v: Boolean) = viewModelScope.launch { settings.setBlockAtSessionLimit(v) }
+    fun setReentryOn(v: Boolean) = viewModelScope.launch { settings.setReentryOn(v) }
+    fun setDailyOverlayMinutes(v: Int) = viewModelScope.launch {
+        settings.setDailyOverlayMinutes(v.coerceIn(15, 180))
+    }
+    fun setWorkAlertsOn(v: Boolean) = viewModelScope.launch { settings.setWorkAlertsOn(v) }
+
+    // ---------- Rotinas de trabalho ----------
+    fun saveWorkRoutine(routine: WorkRoutine) = viewModelScope.launch {
+        if (routine.label.isNotBlank()) db.workRoutineDao().upsert(routine)
+    }
+    fun setWorkRoutineEnabled(routine: WorkRoutine, enabled: Boolean) = viewModelScope.launch {
+        db.workRoutineDao().upsert(routine.copy(enabled = enabled))
+    }
+    fun deleteWorkRoutine(routine: WorkRoutine) = viewModelScope.launch {
+        db.workRoutineDao().delete(routine)
     }
 
     fun setMonitor(on: Boolean) = viewModelScope.launch {

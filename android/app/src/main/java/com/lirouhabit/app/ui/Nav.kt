@@ -19,6 +19,7 @@ import com.lirouhabit.app.ui.screens.SettingsScreen
 import com.lirouhabit.app.ui.screens.StatsScreen
 import com.lirouhabit.app.ui.screens.TrackerScreen
 import com.lirouhabit.app.ui.screens.VicesScreen
+import com.lirouhabit.app.ui.screens.WorkRoutinesScreen
 import com.lirouhabit.app.ui.vm.AppViewModel
 
 object Routes {
@@ -35,6 +36,7 @@ object Routes {
     const val SETTINGS = "settings"
     const val DEV = "dev"
     const val TRACKER = "tracker"
+    const val WORK_ROUTINES = "work_routines"
 }
 
 /**
@@ -85,5 +87,6 @@ fun AppNav(vm: AppViewModel) {
         composable(Routes.SETTINGS) { SettingsScreen(vm = vm, nav = nav, onBack = { nav.popBackStack() }) }
         composable(Routes.DEV) { DevScreen(vm = vm, onBack = { nav.popBackStack() }) }
         composable(Routes.TRACKER) { TrackerScreen(vm = vm, onBack = { nav.popBackStack() }) }
+        composable(Routes.WORK_ROUTINES) { WorkRoutinesScreen(vm = vm, onBack = { nav.popBackStack() }) }
     }
 }

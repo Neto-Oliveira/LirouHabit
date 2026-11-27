@@ -192,7 +192,10 @@ fun HomeScreen(vm: AppViewModel, nav: NavController) {
             NavCard(R.drawable.ic_chart, "Tempo por dia (tracker)", "Evolução do tempo em apps vilões") {
                 nav.navigate(Routes.TRACKER)
             }
-            NavCard(R.drawable.ic_gear, "Configurações", "Limites, agressividade e permissões") {
+            NavCard(R.drawable.ic_target, "Tempo de trabalho", "Rotinas com alerta a cada 1 minuto no vilão") {
+                nav.navigate(Routes.WORK_ROUTINES)
+            }
+            NavCard(R.drawable.ic_gear, "Configurações", "Limites, intervenções e permissões") {
                 nav.navigate(Routes.SETTINGS)
             }
         }

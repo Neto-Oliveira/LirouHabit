@@ -61,6 +61,12 @@ fun SettingsScreen(vm: AppViewModel, nav: NavController, onBack: () -> Unit) {
     val escalation by vm.escalationOn.collectAsState()
     val combineApps by vm.combineAppsTime.collectAsState()
     val trackedApps by vm.trackedApps.collectAsState()
+    val sessionAlerts by vm.sessionAlertsOn.collectAsState()
+    val dailyWarning by vm.dailyWarningOn.collectAsState()
+    val blocking by vm.blockingOn.collectAsState()
+    val blockAtSession by vm.blockAtSessionLimit.collectAsState()
+    val reentry by vm.reentryOn.collectAsState()
+    val dailyLimit by vm.dailyOverlayMinutes.collectAsState()
     var detectedNow by remember { mutableStateOf("…") }
     val versionName = remember {
         runCatching {
@@ -141,6 +147,69 @@ fun SettingsScreen(vm: AppViewModel, nav: NavController, onBack: () -> Unit) {
                         )
                     }
                     Switch(checked = escalation, onCheckedChange = { vm.setEscalation(it) })
+                }
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            // Painel de intervenções (cada funcionalidade pode ser desligada)
+            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("Intervenções", fontWeight = FontWeight.Bold)
+                    Text(
+                        "Escolha o que aparece e quando.",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    SettingToggle(
+                        "Alerta no limite de sessão",
+                        "Notificação no tempo configurado de cada app",
+                        sessionAlerts,
+                        { vm.setSessionAlertsOn(it) }
+                    )
+                    SettingToggle(
+                        "Aviso diário de 15 minutos",
+                        "Usa o acumulado do dia, mesmo alternando apps",
+                        dailyWarning,
+                        { vm.setDailyWarningOn(it) }
+                    )
+                    SettingToggle(
+                        "Tela de bloqueio no limite de sessão",
+                        "Substitui a notificação pela tela cheia",
+                        blockAtSession,
+                        { vm.setBlockAtSessionLimit(it) }
+                    )
+                    SettingToggle(
+                        "Tela de bloqueio no tempo final",
+                        "Aparece ao atingir o acumulado diário configurado abaixo",
+                        blocking,
+                        { vm.setBlockingOn(it) }
+                    )
+                    SettingToggle(
+                        "Confronto ao entrar de novo",
+                        "Depois do tempo final, toda reentrada mostra \"Vale mesmo a pena?\"",
+                        reentry,
+                        { vm.setReentryOn(it) },
+                        enabled = blocking
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text("Tempo final acumulado no dia", fontWeight = FontWeight.Bold)
+                    Text(
+                        "$dailyLimit min · sessão e notificações continuam independentes",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Slider(
+                        value = dailyLimit.toFloat(),
+                        onValueChange = { vm.setDailyOverlayMinutes(it.roundToInt()) },
+                        valueRange = 15f..180f,
+                        steps = 32
+                    )
+                    Spacer(Modifier.height(6.dp))
+                    OutlinedButton(
+                        onClick = { nav.navigate(Routes.WORK_ROUTINES) },
+                        modifier = Modifier.fillMaxWidth()
+                    ) { Text("Configurar rotinas de trabalho") }
                 }
             }
 
@@ -245,6 +314,30 @@ fun SettingsScreen(vm: AppViewModel, nav: NavController, onBack: () -> Unit) {
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun SettingToggle(
+    title: String,
+    subtitle: String,
+    checked: Boolean,
+    onChange: (Boolean) -> Unit,
+    enabled: Boolean = true
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(title, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+            Text(
+                subtitle,
+                fontSize = 11.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Switch(checked = checked, enabled = enabled, onCheckedChange = onChange)
     }
 }
 

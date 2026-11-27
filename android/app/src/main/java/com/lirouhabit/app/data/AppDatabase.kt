@@ -8,8 +8,8 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
-    entities = [Dream::class, Vice::class, Hobby::class, TrackedApp::class, InterventionEvent::class, DailyUsage::class],
-    version = 3,
+    entities = [Dream::class, Vice::class, Hobby::class, TrackedApp::class, InterventionEvent::class, DailyUsage::class, WorkRoutine::class],
+    version = 4,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -19,6 +19,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun trackedAppDao(): TrackedAppDao
     abstract fun eventDao(): EventDao
     abstract fun dailyUsageDao(): DailyUsageDao
+    abstract fun workRoutineDao(): WorkRoutineDao
 
     companion object {
         @Volatile
@@ -51,13 +52,25 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL(
+                    "CREATE TABLE IF NOT EXISTS work_routines (" +
+                        "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                        "label TEXT NOT NULL, daysMask INTEGER NOT NULL, " +
+                        "startMinute INTEGER NOT NULL, endMinute INTEGER NOT NULL, " +
+                        "enabled INTEGER NOT NULL, createdAt INTEGER NOT NULL)"
+                )
+            }
+        }
+
         fun get(context: Context): AppDatabase =
             instance ?: synchronized(this) {
                 instance ?: Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
                     "lirouhabit.db"
-                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3).build().also { instance = it }
+                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4).build().also { instance = it }
             }
     }
 }

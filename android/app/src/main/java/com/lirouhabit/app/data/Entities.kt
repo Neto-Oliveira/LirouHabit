@@ -34,6 +34,30 @@ data class TrackedApp(
     val enabled: Boolean = true
 )
 
+/** Rotina de trabalho/foco com dias e horário; minutos desde meia-noite. */
+@Entity(tableName = "work_routines")
+data class WorkRoutine(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val label: String,
+    val daysMask: Int = 31, // seg(1) … sex(16); dom=64
+    val startMinute: Int = 8 * 60,
+    val endMinute: Int = 18 * 60,
+    val enabled: Boolean = true,
+    val createdAt: Long = System.currentTimeMillis()
+) {
+    fun isActiveAt(dayOfWeek: Int, minuteOfDay: Int): Boolean {
+        if (!enabled) return false
+        if (daysMask and (1 shl (dayOfWeek - 1)) == 0) return false
+        if (startMinute == endMinute) return false
+        return if (startMinute < endMinute) {
+            minuteOfDay in startMinute until endMinute
+        } else {
+            // Rotina que atravessa a meia-noite (ex.: 22h → 06h)
+            minuteOfDay >= startMinute || minuteOfDay < endMinute
+        }
+    }
+}
+
 @Entity(tableName = "intervention_events")
 data class InterventionEvent(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,

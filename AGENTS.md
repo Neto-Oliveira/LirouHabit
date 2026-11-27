@@ -20,6 +20,10 @@ Também contém, na raiz, um protótipo web legado de rotinas/hábitos (HTML/JS 
     loop exige SÓ acesso ao uso, overlay é checada só no marco de 60 min),
     `UsageMonitor` (eventos + fallback por lastTimeUsed), `OverlayManager`
     (ComposeView em WindowManager), `BlockingOverlay` (15s de fricção p/ continuar),
+    tempo final diário é configurável (15–180 min, default 60); overlay pode ser
+    ligado no tempo final e/ou no limite de sessão, e reentrada tem toggle próprio.
+    Rotinas de trabalho (`work_routines`, banco v4): dias + hora início/fim (aceita
+    virar meia-noite); durante a janela, alerta extra a cada 1 min no vilão aberto.
     `PhraseBank` (frases reflexivas em 3 níveis — nunca clichês), `BootReceiver`,
     `InterventionReceiver` (ações da notificação: "Fechar o app" = VICTORY + home,
     "Ignorar"/swipe = DEFEAT + snooze 5 min), `MonitorLog` (log p/ tela secreta)
@@ -50,6 +54,8 @@ cd android
   níveis 1/2/3 + reentrada (4), sorteio sem repetir a última frase do mesmo nível
 - Hobbies (banco v3): nome + `lastPracticedAt`; botão "Pratiquei agora" alimenta
   mensagens "seu hobby está há X dias sem sua atenção"
+- Configurações tem toggles: alerta de sessão, aviso 15min, overlay na sessão/final,
+  reentrada, soma de vilões, trabalho. `WorkRoutinesScreen` cadastra jornadas.
 - Eventos de intervenção: TRIGGERED / VICTORY / DEFEAT (tabela `intervention_events`)
 - Tracker diário: tabela `daily_usage` (banco v2) alimenta `TrackerScreen` e os gráficos
   de uso por dia / semana em `StatsScreen` (semana = seg→dom, zera na segunda)
